@@ -450,7 +450,41 @@ class SoundManager {
   }
 
   playChirp() {
-    this.playStarTwinkle();
+    this.playBirdChirp();
+  }
+
+  playBirdChirp() {
+    this.init();
+    if (!this.ctx || this.isMuted) return;
+    const now = this.ctx.currentTime;
+
+    // Cheerful, realistic sweet dual-tone bird chirp
+    const chirpNotes = [
+      { f1: 2200, f2: 3400, dur: 0.08, delay: 0 },
+      { f1: 2800, f2: 4200, dur: 0.10, delay: 0.09 },
+      { f1: 3200, f2: 4600, dur: 0.12, delay: 0.20 }
+    ];
+
+    chirpNotes.forEach((note) => {
+      const t = now + note.delay;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(note.f1, t);
+      osc.frequency.exponentialRampToValueAtTime(note.f2, t + note.dur * 0.6);
+      osc.frequency.exponentialRampToValueAtTime(note.f1 * 1.1, t + note.dur);
+
+      gain.gain.setValueAtTime(0.001, t);
+      gain.gain.linearRampToValueAtTime(0.28, t + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + note.dur);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + note.dur);
+    });
   }
 
   playHowManyStars(scene) {
@@ -471,6 +505,35 @@ class SoundManager {
     if (scene && scene.sound && scene.cache && scene.cache.audio.exists("voice_how_many_stars")) {
       try {
         scene.sound.stopByKey("voice_how_many_stars");
+      } catch (e) {}
+    }
+    this.stopHowManyBirds();
+  }
+
+  playHowManyBirds(scene) {
+    if (this.isMuted) return;
+    // Play cheerful bird chirp intro
+    this.playBirdChirp();
+
+    // Use Web Speech API if available for high quality voice prompt
+    if ('speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance("How many birds are there?");
+        utterance.rate = 0.95;
+        utterance.pitch = 1.25; // Friendly, youthful pitch for kids
+        utterance.volume = 1.0;
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {
+        console.warn("SpeechSynthesis error:", e);
+      }
+    }
+  }
+
+  stopHowManyBirds() {
+    if ('speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
       } catch (e) {}
     }
   }

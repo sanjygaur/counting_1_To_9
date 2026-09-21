@@ -7,6 +7,13 @@ export default class GameScene extends Phaser.Scene {
   }
 
   init(data) {
+    this.level = data && typeof data.level === "number" ? data.level : 1;
+    this.gameMode =
+      data && data.gameMode
+        ? data.gameMode
+        : this.level === 2
+          ? "birds"
+          : "stars";
     this.score = data && typeof data.score === "number" ? data.score : 0;
     this.starCount =
       data && typeof data.starCount === "number"
@@ -19,7 +26,7 @@ export default class GameScene extends Phaser.Scene {
     this.birdCount = this.starCount; // backwards compatibility
     this.appleCount = this.starCount; // backwards compatibility
     this.timeLeft =
-      data && typeof data.timeLeft === "number" ? data.timeLeft : 15;
+      data && typeof data.timeLeft === "number" ? data.timeLeft : 120;
     this.streak = data && typeof data.streak === "number" ? data.streak : 0;
     this.totalAnswered =
       data && typeof data.totalAnswered === "number" ? data.totalAnswered : 0;
@@ -65,7 +72,7 @@ export default class GameScene extends Phaser.Scene {
     // 2. Top HUD using Real Timer & Score panels, and Star counter badge
     this.createHUD(width);
 
-    // 3. Star Particle Emitter Setup
+    // 3. Star / Sparkle Particle Emitter Setup
     this.starParticles = this.add.particles(0, 0, "particle_star", {
       speed: { min: 140, max: 360 },
       angle: { min: 0, max: 360 },
@@ -127,10 +134,20 @@ export default class GameScene extends Phaser.Scene {
 
     this.scoreContainer.add([this.scorePanel, this.scoreText]);
 
+    // If Level 2 (Birds), show cute bird icon atop the score panel star
+    if (this.gameMode === "birds") {
+      const hudBird = this.add.image(-70, 0, "bird1").setScale(0.55);
+      this.scoreContainer.add(hudBird);
+    }
+
     // Interactive tap on score panel for a fun bounce
     this.scorePanel.setInteractive({ useHandCursor: true });
     this.scorePanel.on("pointerdown", () => {
-      SoundManager.playStarTwinkle();
+      if (this.gameMode === "birds") {
+        SoundManager.playBirdChirp();
+      } else {
+        SoundManager.playStarTwinkle();
+      }
       this.starParticles.emitParticleAt(
         this.scoreContainer.x - 70,
         this.scoreContainer.y,
@@ -225,8 +242,13 @@ export default class GameScene extends Phaser.Scene {
     bg.lineStyle(4, 0xffeb3b, 1);
     bg.strokeRoundedRect(-460, -36, 920, 72, 22);
 
+    const initialText =
+      this.gameMode === "birds"
+        ? "Count the birds: 1... 2... 3! 🐦"
+        : "Count the stars: 1... 2... 3! ⭐";
+
     this.bannerText = this.add
-      .text(0, 0, "Count the stars: 1... 2... 3! ⭐", {
+      .text(0, 0, initialText, {
         fontFamily: "Comic Sans MS, Quicksand, sans-serif",
         fontSize: "30px",
         fontStyle: "bold",
@@ -265,10 +287,11 @@ export default class GameScene extends Phaser.Scene {
       this.correctCountPopup = null;
     }
 
-    // Clean up previous stars and kill active tweens / timers
+    // Clean up previous stars/birds and kill active tweens / timers
     this.currentStars.forEach((s) => {
       this.tweens.killTweensOf(s);
       if (s.starPulse) s.starPulse.remove();
+      if (s.flapTimer) s.flapTimer.remove();
       if (s.list) s.list.forEach((child) => this.tweens.killTweensOf(child));
       s.destroy();
     });
@@ -293,7 +316,7 @@ export default class GameScene extends Phaser.Scene {
       this.scoreText.setScale(1);
     }
 
-    // Structured progression: start from 1 star, then 2, 3, 4, 5, 6, 7, 8, 9, then random!
+    // Structured progression: 1, 2, 3... 9, then random
     this.sequenceStep++;
     if (this.sequenceStep <= 9) {
       this.currentCount = this.sequenceStep;
@@ -305,18 +328,27 @@ export default class GameScene extends Phaser.Scene {
       this.currentCount = nextCount;
     }
 
-    // Spawn stars in open field
-    this.spawnStars(this.currentCount);
+    // Spawn items and voice prompt based on Level mode
+    if (this.gameMode === "birds") {
+      this.spawnBirds(this.currentCount);
+      this.bannerText.setText("Count the birds: 1... 2... 3! 🐦");
+      this.time.delayedCall(220, () => {
+        if (!this.isPaused && !this.isInputLocked) {
+          SoundManager.playHowManyBirds(this);
+        }
+      });
+    } else {
+      this.spawnStars(this.currentCount);
+      this.bannerText.setText("Count the stars: 1... 2... 3! ⭐");
+      this.time.delayedCall(220, () => {
+        if (!this.isPaused && !this.isInputLocked) {
+          SoundManager.playHowManyStars(this);
+        }
+      });
+    }
 
     // Spawn 4 real option boxes (numbers 1 to 9)
     this.spawnOptionBoxes(this.currentCount);
-
-    // Play "How many stars are there?" voice prompt on new level / question
-    this.time.delayedCall(220, () => {
-      if (!this.isPaused && !this.isInputLocked) {
-        SoundManager.playHowManyStars(this);
-      }
-    });
   }
 
   getStarLayout(count) {
@@ -567,7 +599,118 @@ export default class GameScene extends Phaser.Scene {
   }
 
   spawnBirds(count) {
-    this.spawnStars(count);
+    const layout = this.getStarLayout(count);
+
+    layout.forEach((pos, idx) => {
+      const birdContainer = this.add.container(pos.x, pos.y);
+
+      let birdScale = 1.0;
+      if (count <= 4) {
+        birdScale = 1.05;
+      } else if (count <= 6) {
+        birdScale = 0.95;
+      } else {
+        birdScale = 0.86;
+      }
+
+      // Alternate cute bird variations
+      const birdTexture = idx % 2 === 0 ? "bird1" : "bird2";
+      const birdSprite = this.add.image(0, 0, birdTexture).setScale(birdScale);
+
+      birdContainer.add(birdSprite);
+      birdContainer.setSize(140, 140);
+      birdContainer.setInteractive(
+        new Phaser.Geom.Rectangle(0, 0, 140, 140),
+        Phaser.Geom.Rectangle.Contains,
+      );
+      birdContainer.input.cursor = "pointer";
+      birdContainer.starIndex = idx + 1;
+      birdContainer.birdIndex = idx + 1;
+      birdContainer.isCounted = false;
+      birdContainer.starSprite = birdSprite;
+      birdContainer.birdSprite = birdSprite;
+      birdContainer.baseScale = birdScale;
+
+      // Gentle vertical hovering / bobbing
+      const bobDuration = 900 + (idx % 3) * 140;
+      this.tweens.add({
+        targets: birdSprite,
+        y: { from: -10, to: 10 },
+        duration: bobDuration,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+
+      // Flapping wing texture toggle
+      let flapState = idx % 2 === 1;
+      birdContainer.flapTimer = this.time.addEvent({
+        delay: 500 + (idx % 3) * 100,
+        callback: () => {
+          if (birdSprite && birdSprite.active) {
+            flapState = !flapState;
+            birdSprite.setTexture(flapState ? "bird2" : "bird1");
+          }
+        },
+        loop: true,
+      });
+
+      // Interactive Touch-to-Count mechanic
+      birdContainer.on("pointerdown", () => {
+        if (this.isInputLocked || this.isPaused || birdContainer.isCounted)
+          return;
+        this.tappedCount++;
+        birdContainer.isCounted = true;
+
+        SoundManager.playBirdChirp();
+        SoundManager.playCount(this.tappedCount);
+
+        // Sparkle particles at bird
+        this.starParticles.emitParticleAt(pos.x, pos.y, 8);
+
+        // Joyful hop & flip
+        this.tweens.add({
+          targets: birdSprite,
+          y: birdSprite.y - 25,
+          scaleY: birdScale * 1.2,
+          scaleX: birdScale * 1.15,
+          duration: 160,
+          yoyo: true,
+          ease: "Back.easeOut",
+        });
+
+        this.tweens.add({
+          targets: birdContainer,
+          scale: 1.25,
+          duration: 110,
+          yoyo: true,
+          ease: "Quad.easeInOut",
+        });
+
+        // Add count badge above the bird
+        const badge = this.add.image(0, -66, "badge_count").setScale(0);
+        const badgeText = this.add
+          .text(0, -66, `${this.tappedCount}`, {
+            fontFamily: '"Fredoka", "Arial Black", "Comic Sans MS", sans-serif',
+            fontSize: "30px",
+            fontStyle: "900",
+            color: "#0369a1",
+          })
+          .setOrigin(0.5)
+          .setScale(0);
+
+        birdContainer.add([badge, badgeText]);
+
+        this.tweens.add({
+          targets: [badge, badgeText],
+          scale: 1.15,
+          duration: 220,
+          ease: "Back.easeOut",
+        });
+      });
+
+      this.currentStars.push(birdContainer);
+    });
   }
 
   spawnOptionBoxes(correctNumber) {
@@ -710,20 +853,30 @@ export default class GameScene extends Phaser.Scene {
   handleCorrectAnswer(buttonContainer) {
     SoundManager.playCorrect();
 
-    // 1. Increment Streak (Score increments when stars collect into the Score Badge)
+    // 1. Increment Streak (Score increments when stars/birds collect into the Score Badge)
     this.streak++;
     this.baskets = Math.floor((this.score + 1) / 5);
 
     // 2. Celebratory Cheer Indicator for Right Answer
-    const cheers = [
-      "AWESOME! ⭐",
-      "GREAT JOB! 🌟",
-      "CORRECT! 🎉",
-      "SUPER STARS! ✨",
-      "LOVELY STARS! 💫",
-      "EXCELLENT! 🎈",
-      "BRAVO! 👏",
-    ];
+    const cheers =
+      this.gameMode === "birds"
+        ? [
+            "LOVELY BIRDS! 🐦",
+            "GREAT JOB! 🎉",
+            "CORRECT! 🌟",
+            "SUPER BIRDS! 🕊️",
+            "AWESOME! 👏",
+            "EXCELLENT! ✨",
+          ]
+        : [
+            "AWESOME! ⭐",
+            "GREAT JOB! 🌟",
+            "CORRECT! 🎉",
+            "SUPER STARS! ✨",
+            "LOVELY STARS! 💫",
+            "EXCELLENT! 🎈",
+            "BRAVO! 👏",
+          ];
     const cheerPhrase = Phaser.Utils.Array.GetRandom(cheers);
 
     const cheerText = this.add
@@ -756,34 +909,35 @@ export default class GameScene extends Phaser.Scene {
       onComplete: () => cheerText.destroy(),
     });
 
-    // 3. Star Particles at selected button
+    // 3. Particles at selected button
     this.starParticles.emitParticleAt(buttonContainer.x, buttonContainer.y, 22);
 
-    // 4. Celebratory Star Flight: Stars fly into the Score Badge!
-    const totalStars = this.currentStars.length;
-    // Target is the big star on the left side of the Score Badge
+    // 4. Celebratory Flight: Items fly into the Score Badge!
+    const totalItems = this.currentStars.length;
+    // Target is the icon area on the left side of the Score Badge
     const targetX = this.scoreContainer ? this.scoreContainer.x - 70 : 410;
     const targetY = this.scoreContainer ? this.scoreContainer.y : 100;
 
     let scoreIncremented = false;
 
-    this.currentStars.forEach((star, idx) => {
-      star.isFlying = true;
+    this.currentStars.forEach((item, idx) => {
+      item.isFlying = true;
 
       // Clean up idle floating/bobbing
-      this.tweens.killTweensOf(star);
-      if (star.list && star.list.length > 0) {
-        this.tweens.killTweensOf(star.list[0]);
-        star.list[0].setAngle(0);
-        if (star.list.length > 1) {
-          const extraChildren = star.list.slice(1);
+      this.tweens.killTweensOf(item);
+      if (item.flapTimer) item.flapTimer.remove();
+      if (item.list && item.list.length > 0) {
+        this.tweens.killTweensOf(item.list[0]);
+        item.list[0].setAngle(0);
+        if (item.list.length > 1) {
+          const extraChildren = item.list.slice(1);
           extraChildren.forEach((child) => child.destroy());
         }
       }
-      star.setDepth(150);
+      item.setDepth(150);
 
-      // Fast twinkling spin while flying
-      const spr = star.starSprite || star.list[0];
+      // Fast flight animation
+      const spr = item.starSprite || item.birdSprite || item.list[0];
       if (spr) {
         this.tweens.add({
           targets: spr,
@@ -797,15 +951,15 @@ export default class GameScene extends Phaser.Scene {
       const trailTimer = this.time.addEvent({
         delay: 60,
         callback: () => {
-          if (!star.active) return;
-          this.starParticles.emitParticleAt(star.x, star.y, 1);
+          if (!item.active) return;
+          this.starParticles.emitParticleAt(item.x, item.y, 1);
         },
         loop: true,
       });
 
       // Smooth flight arc up to the Score Badge
       this.tweens.add({
-        targets: star,
+        targets: item,
         x: targetX,
         y: targetY,
         scale: 0.3,
@@ -814,21 +968,25 @@ export default class GameScene extends Phaser.Scene {
         ease: "Power2.easeIn",
         onComplete: () => {
           trailTimer.remove();
-          star.destroy();
+          item.destroy();
 
-          // Play count audio, pop, & star twinkle
+          // Play count audio, pop, & twinkle / chirp
           SoundManager.playPop();
           SoundManager.playCount(idx + 1);
-          SoundManager.playStarTwinkle();
+          if (this.gameMode === "birds") {
+            SoundManager.playBirdChirp();
+          } else {
+            SoundManager.playStarTwinkle();
+          }
 
-          // Star sparkle burst at the score badge's golden star
+          // Sparkle burst at the score badge
           this.starParticles.emitParticleAt(targetX, targetY, 12);
 
-          // Punch and zoom in/out the Score Badge for EVERY star collected!
+          // Punch and zoom the Score Badge for EVERY item collected!
           this.punchScoreBadge(1.22, 85);
 
-          // When stars are collected into the Score Badge, increase score by 1 point
-          if (idx === totalStars - 1 && !scoreIncremented) {
+          // When items are collected into the Score Badge, increase score by 1 point
+          if (idx === totalItems - 1 && !scoreIncremented) {
             scoreIncremented = true;
             this.score++;
             this.starCount = this.score;
@@ -864,6 +1022,8 @@ export default class GameScene extends Phaser.Scene {
               if (this.streak > 0 && this.streak % 5 === 0) {
                 this.scene.pause("GameScene");
                 this.scene.launch("WellDoneScene", {
+                  level: this.level,
+                  gameMode: this.gameMode,
                   baskets: this.baskets,
                   score: this.score,
                   starCount: this.starCount,
@@ -910,9 +1070,10 @@ export default class GameScene extends Phaser.Scene {
       });
     }
 
-    // Pedagogical Correction: Sequentially highlight each star in the sky
+    // Pedagogical Correction: Sequentially highlight each item
+    const itemName = this.gameMode === "birds" ? "birds! 🐦" : "stars! ⭐";
     this.bannerText.setText(
-      `Let's count together: There are ${correctNumber} stars! ⭐`,
+      `Let's count together: There are ${correctNumber} ${itemName}`,
     );
     this.tweens.add({
       targets: this.bannerContainer,
@@ -920,12 +1081,16 @@ export default class GameScene extends Phaser.Scene {
       duration: 250,
     });
 
-    this.currentStars.forEach((star, idx) => {
+    this.currentStars.forEach((item, idx) => {
       this.time.delayedCall(idx * 380 + 250, () => {
         SoundManager.playCount(idx + 1);
-        SoundManager.playStarTwinkle();
+        if (this.gameMode === "birds") {
+          SoundManager.playBirdChirp();
+        } else {
+          SoundManager.playStarTwinkle();
+        }
 
-        this.starParticles.emitParticleAt(star.x, star.y, 6);
+        this.starParticles.emitParticleAt(item.x, item.y, 6);
 
         const guideBadge = this.add.image(0, -66, "badge_count").setScale(0);
         const guideText = this.add
@@ -938,7 +1103,7 @@ export default class GameScene extends Phaser.Scene {
           .setOrigin(0.5)
           .setScale(0);
 
-        star.add([guideBadge, guideText]);
+        item.add([guideBadge, guideText]);
 
         this.tweens.add({
           targets: [guideBadge, guideText],
@@ -948,7 +1113,7 @@ export default class GameScene extends Phaser.Scene {
         });
 
         this.tweens.add({
-          targets: star,
+          targets: item,
           scale: 1.24,
           duration: 160,
           yoyo: true,
@@ -1001,8 +1166,9 @@ export default class GameScene extends Phaser.Scene {
     card.fillStyle(0xfffaec, 1);
     card.fillRoundedRect(-350, -174, 700, 340, 32);
 
-    // Golden / orange outer border
-    card.lineStyle(6, 0xf59e0b, 1);
+    // Border
+    const borderCol = this.gameMode === "birds" ? 0x0284c7 : 0xf59e0b;
+    card.lineStyle(6, borderCol, 1);
     card.strokeRoundedRect(-350, -174, 700, 340, 32);
 
     // Soft inner border
@@ -1013,10 +1179,11 @@ export default class GameScene extends Phaser.Scene {
     card.fillStyle(0xffffff, 0.5);
     card.fillRoundedRect(-325, -164, 650, 20, 10);
 
-    // 3. Star Icon with gentle breathing pulse and gentle sway
-    const starIcon = this.add.image(0, -78, "star").setScale(0.65);
+    // 3. Icon with gentle breathing pulse
+    const iconKey = this.gameMode === "birds" ? "bird1" : "star";
+    const itemIcon = this.add.image(0, -78, iconKey).setScale(0.65);
     this.tweens.add({
-      targets: starIcon,
+      targets: itemIcon,
       scale: 0.72,
       angle: { from: -4, to: 4 },
       duration: 600,
@@ -1031,7 +1198,7 @@ export default class GameScene extends Phaser.Scene {
         fontFamily: '"Fredoka", "Arial Black", Impact, sans-serif',
         fontSize: "52px",
         fontStyle: "900",
-        color: "#b45309",
+        color: this.gameMode === "birds" ? "#0369a1" : "#b45309",
         stroke: "#ffffff",
         strokeThickness: 8,
         shadow: {
@@ -1046,8 +1213,12 @@ export default class GameScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     // 5. Friendly encouraging subtitle
+    const subLabel =
+      this.gameMode === "birds"
+        ? "🐦 Count the birds carefully!"
+        : "⭐ Count the stars carefully!";
     const subText = this.add
-      .text(0, 85, "⭐ Count the stars carefully!", {
+      .text(0, 85, subLabel, {
         fontFamily: '"Fredoka", "Arial Black", sans-serif',
         fontSize: "30px",
         fontStyle: "900",
@@ -1068,7 +1239,7 @@ export default class GameScene extends Phaser.Scene {
     this.correctCountPopup.add([
       backdrop,
       card,
-      starIcon,
+      itemIcon,
       titleText,
       subText,
       hintText,

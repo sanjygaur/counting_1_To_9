@@ -97,9 +97,18 @@ export default class MenuScene extends Phaser.Scene {
       SoundManager.init();
       SoundManager.startBGM();
       SoundManager.playPop();
-      this.cameras.main.fade(300, 255, 255, 255);
-      this.time.delayedCall(300, () => {
-        this.scene.start("GameScene");
+      this.tweens.add({
+        targets: startBtn,
+        scale: 0.9,
+        duration: 80,
+        yoyo: true,
+        ease: "Quad.easeInOut",
+        onComplete: () => {
+          this.cameras.main.fade(280, 255, 255, 255);
+          this.time.delayedCall(280, () => {
+            this.scene.start("LevelSelectScene");
+          });
+        },
       });
     });
 
@@ -147,7 +156,8 @@ export default class MenuScene extends Phaser.Scene {
       });
     });
 
-    // Create How To Play Modal Container (Hidden)
+    // Create Modals Containers (Hidden by default)
+    this.createLevelSelectModal(width, height);
     this.createHowToPlayModal(width, height);
   }
 

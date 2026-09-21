@@ -156,6 +156,8 @@ export default class GameOverScene extends Phaser.Scene {
         ease: "Quad.easeInOut",
         onComplete: () => {
           this.scene.start("GameScene", {
+            level: data.level || 1,
+            gameMode: data.gameMode || (data.level === 2 ? "birds" : "stars"),
             score: 0,
             starCount: 0,
             birdCount: 0,
