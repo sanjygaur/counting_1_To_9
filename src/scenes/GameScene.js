@@ -610,7 +610,7 @@ export default class GameScene extends Phaser.Scene {
       const birdContainer = SpineBird.create(this, pos.x, pos.y, {
         scale: birdScale,
         index: idx + 1,
-        facingDir: Phaser.Math.RND.pick([1, -1]),
+        facingDir: 1,
         interactive: true,
       });
 

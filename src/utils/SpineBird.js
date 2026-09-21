@@ -10,13 +10,8 @@ export default class SpineBird {
     const scale = config.scale || 0.32; // Scaled to fit comfortably in layout
     const index = config.index || 1;
     const isInteractive = config.interactive !== false;
-    // Randomize initial facing direction (1 = left, -1 = right)
-    const facingDir =
-      config.facingDir !== undefined
-        ? config.facingDir
-        : config.randomFacing !== false
-          ? Phaser.Math.RND.pick([1, -1])
-          : 1;
+    // Consistent uniform facing direction (1 = left)
+    const facingDir = config.facingDir !== undefined ? config.facingDir : 1;
 
     const container = scene.add.container(x, y);
 
