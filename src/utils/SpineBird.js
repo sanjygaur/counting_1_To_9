@@ -9,6 +9,8 @@ export default class SpineBird {
     const scale = config.scale || 0.32; // Scaled to fit comfortably in layout
     const index = config.index || 1;
     const isInteractive = config.interactive !== false;
+    // Randomize initial facing direction (1 = left, -1 = right)
+    const facingDir = config.facingDir !== undefined ? config.facingDir : (config.randomFacing !== false ? Phaser.Math.RND.pick([1, -1]) : 1);
 
     const container = scene.add.container(x, y);
 
@@ -27,7 +29,7 @@ export default class SpineBird {
 
     if (hasSpineParts) {
       // Articulated Multi-part Spine Rig Root
-      birdRoot = scene.add.container(0, 0).setScale(scale);
+      birdRoot = scene.add.container(0, 0).setScale(scale * facingDir, scale);
 
       // 1. Tail (Behind Body)
       if (scene.textures.exists("spine_bird_tail")) {
@@ -81,7 +83,7 @@ export default class SpineBird {
       const textureKey = scene.textures.exists("spine_bird_full")
         ? "spine_bird_full"
         : "level2_bird";
-      birdRoot = scene.add.image(0, 0, textureKey).setScale(scale);
+      birdRoot = scene.add.image(0, 0, textureKey).setScale(scale * facingDir, scale);
       container.add(birdRoot);
     }
 
@@ -99,6 +101,7 @@ export default class SpineBird {
     container.starIndex = index; // compatibility alias
     container.isCounted = false;
     container.baseScale = scale;
+    container.facingDir = facingDir;
     container.baseX = x;
     container.baseY = y;
     container.badges = [];
@@ -191,7 +194,7 @@ export default class SpineBird {
     container.flyTo = (targetX, targetY, options = {}) => {
       const duration = options.duration || 680;
       const delay = options.delay || 0;
-      const onComplete = options.onComplete || (() => {});
+      const onComplete = options.onComplete || (() => { });
 
       container.isFlying = true;
       container.setDepth(150);
@@ -291,7 +294,7 @@ export default class SpineBird {
 
           // Smooth scale reduction towards target
           const currentScale = Phaser.Math.Linear(scale, scale * 0.42, t);
-          
+
           // Realistic dynamic banking tilt along flight velocity
           if (tangent) {
             const angleDeg = Phaser.Math.RadToDeg(Math.atan2(tangent.y, tangent.x));
