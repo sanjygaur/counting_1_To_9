@@ -44,11 +44,8 @@ export default class GameScene extends Phaser.Scene {
     this.tappedCount = 0;
     this.currentCount = 0;
 
-    // 1. Background: Desert for Level 2 (Bird Counting) & Meadow for Level 1 (Star Counting)
-    const isLevel2 = this.gameMode === "birds" || this.level === 2;
-    const bgKey = isLevel2 && this.textures.exists("bg_desert") ? "bg_desert" : "bg_main";
-    this.background = this.add.image(width / 2, height / 2, bgKey);
-    this.background.setDisplaySize(width, height);
+    // 1. Multi-layered Vertical Parallax Scenery (Desert Background, Mountains, Dunes, Heat Particles)
+    this.createVerticalParallax(width, height);
 
     // Start or ensure background music is playing
     SoundManager.init();
@@ -1475,6 +1472,94 @@ export default class GameScene extends Phaser.Scene {
         baskets: this.baskets,
       });
     });
+  }
+
+  createVerticalParallax(width, height) {
+    // 1. Primary Desert Background Layer (Distant Sky, Sun, Far Mountains)
+    const bgKey = this.textures.exists("bg_desert") ? "bg_desert" : "bg_main";
+    this.desertBg = this.add.image(width / 2, height / 2, bgKey).setDepth(0);
+    // Sized slightly larger than screen to permit smooth vertical parallax movement
+    this.desertBg.setDisplaySize(width, height + 180);
+    this.desertBgBaseY = height / 2;
+
+    // 2. Midground Canyon & Mountain Depth Layer
+    if (this.textures.exists("bg_parallax_mountains")) {
+      this.mountainLayer = this.add
+        .image(width / 2, height / 2, "bg_parallax_mountains")
+        .setDepth(1)
+        .setAlpha(0.75);
+      this.mountainLayer.setDisplaySize(width, height + 240);
+      this.mountainBaseY = height / 2;
+    }
+
+    // 3. Foreground Rolling Sand Dunes Layer
+    if (this.textures.exists("bg_parallax_dunes")) {
+      this.duneLayer = this.add
+        .image(width / 2, height / 2, "bg_parallax_dunes")
+        .setDepth(2)
+        .setAlpha(0.85);
+      this.duneLayer.setDisplaySize(width, height + 300);
+      this.duneBaseY = height / 2;
+    }
+
+    // 4. Ambient Rising Desert Dust & Heat Haze Particles (Depth 3)
+    if (this.textures.exists("particle_heat_dust")) {
+      this.heatDustParticles = this.add.particles(0, 0, "particle_heat_dust", {
+        x: { min: 0, max: width },
+        y: { min: height, max: height + 60 },
+        speedY: { min: -40, max: -90 },
+        speedX: { min: -15, max: 15 },
+        scale: { start: 1.0, end: 0.1 },
+        alpha: { start: 0.7, end: 0 },
+        lifespan: 5000,
+        frequency: 240,
+      });
+      this.heatDustParticles.setDepth(3);
+    }
+  }
+
+  update(time, delta) {
+    if (!this.desertBg) return;
+    const { height } = this.scale;
+
+    // 1. Smooth Multi-Harmonic Vertical Floating Wave (Simulates air currents)
+    const bgWave = Math.sin(time * 0.0006) * 12;
+    const mountainWave = Math.sin(time * 0.001 + 0.9) * 24;
+    const duneWave = Math.sin(time * 0.0014 + 1.8) * 42;
+
+    // 2. Interactive Pointer / Touch Vertical Parallax
+    let pointerNormY = 0;
+    const pointer = this.input.activePointer;
+    if (pointer && (pointer.isDown || pointer.x > 0 || pointer.y > 0)) {
+      pointerNormY = Phaser.Math.Clamp(
+        (pointer.y - height / 2) / (height / 2),
+        -1,
+        1,
+      );
+    }
+
+    // 3. Smooth Damped Interpolation across depths
+    const targetBgY = this.desertBgBaseY + bgWave + pointerNormY * 18;
+    this.desertBg.y = Phaser.Math.Linear(this.desertBg.y, targetBgY, 0.05);
+
+    if (this.mountainLayer) {
+      const targetMountainY =
+        this.mountainBaseY + mountainWave + pointerNormY * 38;
+      this.mountainLayer.y = Phaser.Math.Linear(
+        this.mountainLayer.y,
+        targetMountainY,
+        0.05,
+      );
+    }
+
+    if (this.duneLayer) {
+      const targetDuneY = this.duneBaseY + duneWave + pointerNormY * 68;
+      this.duneLayer.y = Phaser.Math.Linear(
+        this.duneLayer.y,
+        targetDuneY,
+        0.05,
+      );
+    }
   }
 
   shutdown() {
