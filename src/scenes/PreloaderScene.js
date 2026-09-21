@@ -144,7 +144,7 @@ export default class PreloaderScene extends Phaser.Scene {
     this.load.image("box3", "/assets/gameScene/box3.avif");
     this.load.image("box4", "/assets/gameScene/box4.avif");
     this.load.image("panel_timer", "/assets/gameScene/timer.avif");
-    this.load.image("panel_score", "/assets/gameScene/score.avif");
+    this.load.image("panel_score", "/assets/gameScene/birdHouse.png");
     this.load.image("btn_game_pause", "/assets/gameScene/resume.avif");
     this.load.image("btn_game_resume", "/assets/gameScene/Pause.avif");
     this.load.image("btn_game_mute", "/assets/gameScene/mute.avif");

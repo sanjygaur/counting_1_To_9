@@ -116,56 +116,38 @@ export default class GameScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(61);
 
-    // 2. Score Panel
-    this.scoreContainer = this.add.container(480, 100).setDepth(60);
-    this.scorePanel = this.add.image(0, 0, "panel_score").setScale(1);
+    // 2. Score Panel (Birdhouse with Nest, Food & Water Bowls)
+    this.scoreContainer = this.add.container(480, 105).setDepth(60);
+    this.scorePanel = this.add.image(0, 0, "panel_score").setScale(0.85);
 
     this.scoreText = this.add
-      .text(40, 18, `${this.score}`, {
+      .text(0, -18, `${this.score}`, {
         fontFamily: "Comic Sans MS, Quicksand, sans-serif",
-        fontSize: "36px",
+        fontSize: "32px",
         fontStyle: "bold",
-        color: "#ffffff",
-        stroke: "#5d2b00",
-        strokeThickness: 6,
+        color: "#5d2b00",
+        stroke: "#ffffff",
+        strokeThickness: 3,
       })
       .setOrigin(0.5);
 
     this.scoreContainer.add([this.scorePanel, this.scoreText]);
 
-    // Display Bird Food & Water Dish icon over the star on score panel
-    if (this.textures.exists("icon_food_water")) {
-      this.foodWaterIcon = this.add
-        .image(-70, 0, "icon_food_water")
-        .setScale(0.78);
-      this.scoreContainer.add(this.foodWaterIcon);
-
-      // Subtle gentle floating / breathing tween for the food & water badge
-      this.tweens.add({
-        targets: this.foodWaterIcon,
-        scale: 0.82,
-        duration: 1400,
-        yoyo: true,
-        repeat: -1,
-        ease: "Sine.easeInOut",
-      });
-    }
-
-    // Interactive tap on score panel for a fun bounce
+    // Interactive tap on score birdhouse for a fun bounce
     this.scorePanel.setInteractive({ useHandCursor: true });
     this.scorePanel.on("pointerdown", () => {
       SoundManager.playBirdChirp();
       this.starParticles.emitParticleAt(
-        this.scoreContainer.x - 70,
-        this.scoreContainer.y,
-        10,
+        this.scoreContainer.x,
+        this.scoreContainer.y + 15,
+        12,
       );
-      this.punchScoreBadge(1.24, 90);
+      this.punchScoreBadge(1.18, 90);
     });
 
     // Backwards compatibility aliases
     this.headerStarContainer = this.scoreContainer;
-    this.headerStarIcon = { x: -70, y: 0 };
+    this.headerStarIcon = { x: 0, y: 15 };
     this.headerBirdContainer = this.headerStarContainer;
     this.headerBirdIcon = this.headerStarIcon;
     this.headerAppleContainer = this.headerStarContainer;
@@ -830,9 +812,9 @@ export default class GameScene extends Phaser.Scene {
 
     // 4. Celebratory Flight: Items fly into the Score Badge!
     const totalItems = this.currentStars.length;
-    // Target is the icon area on the left side of the Score Badge
-    const targetX = this.scoreContainer ? this.scoreContainer.x - 70 : 410;
-    const targetY = this.scoreContainer ? this.scoreContainer.y : 100;
+    // Target is the bird nest / food & water bowls in the Score Birdhouse
+    const targetX = this.scoreContainer ? this.scoreContainer.x : 480;
+    const targetY = this.scoreContainer ? this.scoreContainer.y + 15 : 120;
 
     let scoreIncremented = false;
 
