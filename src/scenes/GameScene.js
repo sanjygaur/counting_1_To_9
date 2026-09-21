@@ -125,13 +125,13 @@ export default class GameScene extends Phaser.Scene {
     this.scorePanel = this.add.image(panelX, panelY, "panel_score").setScale(panelScale);
 
     this.scoreText = this.add
-      .text(panelX, panelY - Math.round(16 * panelScale), `${this.score}`, {
+      .text(panelX, panelY - Math.round(23 * panelScale), `${this.score}`, {
         fontFamily: "Comic Sans MS, Quicksand, sans-serif",
-        fontSize: "34px",
+        fontSize: "28px",
         fontStyle: "bold",
         color: "#5d2b00",
         stroke: "#ffffff",
-        strokeThickness: 4,
+        strokeThickness: 3,
       })
       .setOrigin(0.5);
 
