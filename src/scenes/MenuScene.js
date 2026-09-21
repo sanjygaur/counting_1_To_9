@@ -156,8 +156,7 @@ export default class MenuScene extends Phaser.Scene {
       });
     });
 
-    // Create Modals Containers (Hidden by default)
-    this.createLevelSelectModal(width, height);
+    // Create How To Play Modal Container (Hidden by default)
     this.createHowToPlayModal(width, height);
   }
 
