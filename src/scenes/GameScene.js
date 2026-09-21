@@ -617,9 +617,7 @@ export default class GameScene extends Phaser.Scene {
       }
 
       // Use Level 2 dedicated bird texture (assets/level2/Play2/bird.avif)
-      const mainBirdTexture = this.textures.exists("level2_bird") ? "level2_bird" : "bird1";
-      const altBirdTexture = this.textures.exists("bird2") ? "bird2" : mainBirdTexture;
-      const birdTexture = idx % 2 === 0 ? mainBirdTexture : (this.textures.exists("bird1") ? "bird1" : mainBirdTexture);
+      const birdTexture = "level2_bird";
       const birdSprite = this.add.image(0, 0, birdTexture).setScale(birdScale);
 
       birdContainer.add(birdSprite);
@@ -640,24 +638,31 @@ export default class GameScene extends Phaser.Scene {
       const bobDuration = 900 + (idx % 3) * 140;
       this.tweens.add({
         targets: birdSprite,
-        y: { from: -10, to: 10 },
+        y: { from: -12, to: 12 },
         duration: bobDuration,
         yoyo: true,
         repeat: -1,
         ease: "Sine.easeInOut",
       });
 
-      // Flapping wing texture toggle
-      let flapState = idx % 2 === 1;
-      birdContainer.flapTimer = this.time.addEvent({
-        delay: 500 + (idx % 3) * 100,
-        callback: () => {
-          if (birdSprite && birdSprite.active) {
-            flapState = !flapState;
-            birdSprite.setTexture(flapState ? altBirdTexture : mainBirdTexture);
-          }
-        },
-        loop: true,
+      // Gentle floating wing flutter animation (scaling without texture swapping)
+      this.tweens.add({
+        targets: birdSprite,
+        scaleY: { from: birdScale * 0.94, to: birdScale * 1.06 },
+        duration: 400 + (idx % 3) * 80,
+        yoyo: true,
+        repeat: -1,
+        ease: "Quad.easeInOut",
+      });
+
+      // Subtle angle sway
+      this.tweens.add({
+        targets: birdSprite,
+        angle: { from: -4, to: 4 },
+        duration: 1100 + (idx % 3) * 120,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
       });
 
       // Interactive Touch-to-Count mechanic

@@ -279,7 +279,7 @@ export default class LevelSelectScene extends Phaser.Scene {
     const sprite = this.add.image(0, 0, iconKey).setScale(isBird ? 1.15 : 1.05);
 
     if (isBird) {
-      // Bobbing & wing flapping animation
+      // Bobbing & wing breathing animation
       this.tweens.add({
         targets: sprite,
         y: { from: -10, to: 10 },
@@ -289,16 +289,13 @@ export default class LevelSelectScene extends Phaser.Scene {
         ease: "Sine.easeInOut",
       });
 
-      let flapState = false;
-      this.time.addEvent({
-        delay: 450,
-        callback: () => {
-          if (sprite && sprite.active) {
-            flapState = !flapState;
-            sprite.setTexture(flapState ? "bird2" : "bird1");
-          }
-        },
-        loop: true,
+      this.tweens.add({
+        targets: sprite,
+        scaleY: { from: 1.08, to: 1.22 },
+        duration: 450,
+        yoyo: true,
+        repeat: -1,
+        ease: "Quad.easeInOut",
       });
     } else {
       // Twinkle & pulse animation
