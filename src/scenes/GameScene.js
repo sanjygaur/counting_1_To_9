@@ -44,8 +44,11 @@ export default class GameScene extends Phaser.Scene {
     this.tappedCount = 0;
     this.currentCount = 0;
 
-    // 1. Multi-layered Vertical Parallax Scenery (Desert Background, Mountains, Dunes, Heat Particles)
-    this.createVerticalParallax(width, height);
+    // 1. Background: Desert for Level 2 (Bird Counting) & Meadow for Level 1 (Star Counting)
+    const isLevel2 = this.gameMode === "birds" || this.level === 2;
+    const bgKey = isLevel2 && this.textures.exists("bg_desert") ? "bg_desert" : "bg_main";
+    this.background = this.add.image(width / 2, height / 2, bgKey);
+    this.background.setDisplaySize(width, height);
 
     // Start or ensure background music is playing
     SoundManager.init();
