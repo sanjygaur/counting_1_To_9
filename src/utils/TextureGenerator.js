@@ -1,8 +1,210 @@
 export default class TextureGenerator {
   static createAllTextures(scene) {
-    // Only generate the auxiliary textures actually used by the game
+    // Generate auxiliary textures used by the game
     this.createStar(scene);
     this.createBadge(scene);
+    this.createBirdFoodWaterBadge(scene);
+  }
+
+  static createBirdFoodWaterBadge(scene) {
+    if (scene.textures.exists("icon_food_water")) return;
+    const w = 200, h = 200;
+    const canvas = scene.textures.createCanvas("icon_food_water", w, h);
+    const ctx = canvas.getContext();
+
+    // 1. Outer Golden-Amber Badge Shield
+    const bgGlow = ctx.createRadialGradient(100, 100, 30, 100, 100, 96);
+    bgGlow.addColorStop(0, "#fef08a");
+    bgGlow.addColorStop(0.5, "#f59e0b");
+    bgGlow.addColorStop(0.85, "#d97706");
+    bgGlow.addColorStop(1, "#92400e");
+    ctx.fillStyle = bgGlow;
+    ctx.beginPath();
+    ctx.arc(100, 100, 94, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#78350f";
+    ctx.lineWidth = 6;
+    ctx.stroke();
+
+    // Inner Cream Plate
+    ctx.fillStyle = "#fffbeb";
+    ctx.beginPath();
+    ctx.arc(100, 100, 84, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2. Dual Feeder Dish Tray Base (Teal / Turquoise Ceramic)
+    const dishGrad = ctx.createLinearGradient(30, 80, 170, 155);
+    dishGrad.addColorStop(0, "#0f766e");
+    dishGrad.addColorStop(0.4, "#14b8a6");
+    dishGrad.addColorStop(1, "#0d9488");
+    ctx.fillStyle = dishGrad;
+
+    // Dual rounded bowl tray shape
+    ctx.beginPath();
+    ctx.arc(68, 120, 36, 0, Math.PI * 2);
+    ctx.arc(132, 120, 36, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#134e4a";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(68, 120, 36, Math.PI * 0.5, Math.PI * 1.5);
+    ctx.lineTo(132, 84);
+    ctx.arc(132, 120, 36, -Math.PI * 0.5, Math.PI * 0.5);
+    ctx.lineTo(68, 156);
+    ctx.closePath();
+    ctx.stroke();
+
+    // 3. LEFT BOWL: Bird Food & Grains (Golden seeds, grains & berries)
+    const foodGrad = ctx.createRadialGradient(68, 116, 5, 68, 120, 32);
+    foodGrad.addColorStop(0, "#fef08a");
+    foodGrad.addColorStop(0.6, "#f59e0b");
+    foodGrad.addColorStop(1, "#b45309");
+    ctx.fillStyle = foodGrad;
+    ctx.beginPath();
+    ctx.arc(68, 120, 30, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Seed grains detail
+    ctx.fillStyle = "#78350f";
+    const seeds = [
+      { x: 58, y: 110, r: 3.2, a: 0.4 },
+      { x: 74, y: 108, r: 3.5, a: -0.3 },
+      { x: 54, y: 122, r: 3.0, a: 0.8 },
+      { x: 78, y: 124, r: 3.4, a: -0.6 },
+      { x: 68, y: 130, r: 2.8, a: 0.2 },
+      { x: 66, y: 118, r: 3.6, a: 0.5 },
+    ];
+    seeds.forEach(s => {
+      ctx.beginPath();
+      ctx.ellipse(s.x, s.y, s.r, s.r * 1.8, s.a, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Sunflower seeds (black/white)
+    ctx.fillStyle = "#1e293b";
+    ctx.beginPath();
+    ctx.ellipse(60, 128, 2.5, 6, 0.7, 0, Math.PI * 2);
+    ctx.ellipse(76, 114, 2.5, 6, -0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Red Berry on top of food
+    ctx.fillStyle = "#e11d48";
+    ctx.beginPath();
+    ctx.arc(78, 102, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.beginPath();
+    ctx.arc(76, 100, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 4. RIGHT BOWL: Sparkling Fresh Blue Water
+    const waterGrad = ctx.createRadialGradient(130, 114, 4, 132, 120, 30);
+    waterGrad.addColorStop(0, "#e0f2fe");
+    waterGrad.addColorStop(0.3, "#38bdf8");
+    waterGrad.addColorStop(0.75, "#0284c7");
+    waterGrad.addColorStop(1, "#0369a1");
+    ctx.fillStyle = waterGrad;
+    ctx.beginPath();
+    ctx.arc(132, 120, 30, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Water ripple rings
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.ellipse(132, 117, 18, 9, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(132, 123, 24, 13, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Sparkling glint on water
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(124, 110, 4, 0, Math.PI * 2);
+    ctx.arc(142, 126, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Water droplet splashing up
+    ctx.fillStyle = "#38bdf8";
+    ctx.beginPath();
+    ctx.arc(140, 92, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(139, 91, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 5. Cute Bird Perched at the top
+    // Bird Body
+    const birdGrad = ctx.createRadialGradient(100, 60, 4, 100, 64, 26);
+    birdGrad.addColorStop(0, "#fed7aa");
+    birdGrad.addColorStop(0.5, "#fb923c");
+    birdGrad.addColorStop(1, "#ea580c");
+    ctx.fillStyle = birdGrad;
+    ctx.beginPath();
+    ctx.ellipse(100, 66, 22, 18, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bird Wing
+    ctx.fillStyle = "#c2410c";
+    ctx.beginPath();
+    ctx.ellipse(88, 68, 12, 8, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bird Head/Face
+    ctx.fillStyle = "#fdba74";
+    ctx.beginPath();
+    ctx.arc(114, 54, 13, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Beak
+    ctx.fillStyle = "#f59e0b";
+    ctx.beginPath();
+    ctx.moveTo(125, 52);
+    ctx.lineTo(136, 56);
+    ctx.lineTo(125, 60);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#b45309";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Big Cute Bird Eye
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(118, 52, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#1e293b";
+    ctx.beginPath();
+    ctx.arc(119, 52, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(120, 51, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bird Crest Feathers
+    ctx.fillStyle = "#ea580c";
+    ctx.beginPath();
+    ctx.moveTo(108, 44);
+    ctx.quadraticCurveTo(112, 34, 118, 42);
+    ctx.lineTo(112, 45);
+    ctx.fill();
+
+    // 6. Fresh Green Leaf Sprig on Rim
+    ctx.fillStyle = "#22c55e";
+    ctx.beginPath();
+    ctx.ellipse(40, 100, 7, 13, -Math.PI / 3, 0, Math.PI * 2);
+    ctx.ellipse(160, 100, 7, 13, Math.PI / 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    canvas.refresh();
   }
 
   static createBackground(scene) {

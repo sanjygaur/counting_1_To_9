@@ -133,24 +133,32 @@ export default class GameScene extends Phaser.Scene {
 
     this.scoreContainer.add([this.scorePanel, this.scoreText]);
 
-    // If Level 2, display mini spine bird icon over the star on score panel
-    if (isLevel2 && this.textures.exists("spine_bird_full")) {
-      const birdMini = this.add.image(-70, 0, "spine_bird_full").setScale(0.14);
-      this.scoreContainer.add(birdMini);
+    // Display Bird Food & Water Dish icon over the star on score panel
+    if (this.textures.exists("icon_food_water")) {
+      this.foodWaterIcon = this.add
+        .image(-70, 0, "icon_food_water")
+        .setScale(0.78);
+      this.scoreContainer.add(this.foodWaterIcon);
+
+      // Subtle gentle floating / breathing tween for the food & water badge
+      this.tweens.add({
+        targets: this.foodWaterIcon,
+        scale: 0.82,
+        duration: 1400,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
     }
 
     // Interactive tap on score panel for a fun bounce
     this.scorePanel.setInteractive({ useHandCursor: true });
     this.scorePanel.on("pointerdown", () => {
-      if (isLevel2) {
-        SoundManager.playBirdChirp();
-      } else {
-        SoundManager.playStarTwinkle();
-      }
+      SoundManager.playBirdChirp();
       this.starParticles.emitParticleAt(
         this.scoreContainer.x - 70,
         this.scoreContainer.y,
-        8,
+        10,
       );
       this.punchScoreBadge(1.24, 90);
     });
