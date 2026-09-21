@@ -139,8 +139,6 @@ export default class PreloaderScene extends Phaser.Scene {
     // 3. Game Scene Shared Assets
     this.load.image("star", "/assets/gameScene/star.avif");
     this.load.image("star_item", "/assets/gameScene/star.avif");
-    this.load.image("bird1", "/assets/gameScene/birds1.avif");
-    this.load.image("bird2", "/assets/gameScene/birds2.avif");
     this.load.image("box1", "/assets/gameScene/box.avif");
     this.load.image("box2", "/assets/gameScene/box2.avif");
     this.load.image("box3", "/assets/gameScene/box3.avif");
