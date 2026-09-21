@@ -3,8 +3,8 @@ import SoundManager from "./SoundManager.js";
 
 export default class SpineBird {
   /**
-   * Create a smoothly animated Spine Bird container in the specified Phaser scene.
-   * Uses the seamless high-resolution bird artwork with fluid skeletal squash/stretch flight mechanics.
+   * Create an articulated 2D Spine Bird with genuine skeletal multi-part anatomy
+   * (Tail, Feet, Body/Head, and Wing with shoulder pivot).
    */
   static create(scene, x, y, config = {}) {
     const scale = config.scale || 0.32; // Scaled to fit comfortably in layout
@@ -20,15 +20,53 @@ export default class SpineBird {
 
     const container = scene.add.container(x, y);
 
-    // Master seamless texture (zero gaps, zero detached feathers)
-    const textureKey = scene.textures.exists("spine_bird_full")
-      ? "spine_bird_full"
-      : "level2_bird";
+    // Articulated Multi-part Spine Rig Root
+    const birdRoot = scene.add.container(0, 0).setScale(scale * facingDir, scale);
 
-    const birdRoot = scene.add
-      .image(0, 0, textureKey)
-      .setScale(scale * facingDir, scale)
-      .setOrigin(0.5, 0.5);
+    let tailSprite;
+    let feetSprite;
+    let bodySprite;
+    let wingSprite;
+
+    const hasSpineParts =
+      scene.textures.exists("spine_bird_body") &&
+      scene.textures.exists("spine_bird_wing") &&
+      scene.textures.exists("spine_bird_tail");
+
+    if (hasSpineParts) {
+      // 1. Layer 1 (Backmost): Articulated Tail Feathers
+      tailSprite = scene.add
+        .image(116, 60, "spine_bird_tail")
+        .setOrigin(0.12, 0.51);
+      birdRoot.add(tailSprite);
+
+      // 2. Layer 2 (Under): Feet
+      if (scene.textures.exists("spine_bird_feet")) {
+        feetSprite = scene.add
+          .image(-26, 112, "spine_bird_feet")
+          .setOrigin(0.5, 0.16);
+        birdRoot.add(feetSprite);
+      }
+
+      // 3. Layer 3 (Middle): Body & Head (with eyes, beak, and chest)
+      bodySprite = scene.add
+        .image(-82, 4, "spine_bird_body")
+        .setOrigin(0.5, 0.5);
+      birdRoot.add(bodySprite);
+
+      // 4. Layer 4 (Front Fore-layer): Wing with true shoulder joint pivot
+      wingSprite = scene.add
+        .image(-70, 18, "spine_bird_wing")
+        .setOrigin(0.17, 0.84);
+      birdRoot.add(wingSprite);
+    } else {
+      // Fallback single sprite
+      const textureKey = scene.textures.exists("spine_bird_full")
+        ? "spine_bird_full"
+        : "level2_bird";
+      bodySprite = scene.add.image(0, 0, textureKey).setOrigin(0.5, 0.5);
+      birdRoot.add(bodySprite);
+    }
 
     container.add(birdRoot);
 
@@ -36,6 +74,10 @@ export default class SpineBird {
     container.birdRoot = birdRoot;
     container.birdSprite = birdRoot;
     container.starSprite = birdRoot; // compatibility alias
+    container.wingSprite = wingSprite;
+    container.tailSprite = tailSprite;
+    container.feetSprite = feetSprite;
+    container.bodySprite = bodySprite;
     container.birdIndex = index;
     container.starIndex = index; // compatibility alias
     container.isCounted = false;
@@ -45,9 +87,9 @@ export default class SpineBird {
     container.baseY = y;
     container.badges = [];
 
-    // 1. Smooth Flight Hovering & Vertical Bobbing
+    // 1. Fluid In-Flight Hovering & Vertical Wave
     const bobOffset = config.bobOffset !== undefined ? config.bobOffset : 14;
-    const bobDuration = 900 + (index % 3) * 140;
+    const bobDuration = 880 + (index % 3) * 130;
 
     container.bobTween = scene.tweens.add({
       targets: birdRoot,
@@ -58,30 +100,77 @@ export default class SpineBird {
       ease: "Sine.easeInOut",
     });
 
-    // 2. Realistic Spine-like Wing Flap & Breathing Dynamics
-    const flapDuration = 270 + (index % 3) * 35;
-    container.flapTween = scene.tweens.add({
-      targets: birdRoot,
-      scaleY: { from: scale * 0.85, to: scale * 1.12 },
-      scaleX: { from: scale * facingDir * 1.05, to: scale * facingDir * 0.95 },
-      duration: flapDuration,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut",
-    });
+    // 2. Realistic Skeletal Wing Flap (True shoulder joint rotation)
+    const flapDuration = 250 + (index % 3) * 30;
+    if (wingSprite) {
+      container.wingTween = scene.tweens.add({
+        targets: wingSprite,
+        angle: { from: -24, to: 28 },
+        scaleY: { from: 0.84, to: 1.12 },
+        duration: flapDuration,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+    } else {
+      container.flapTween = scene.tweens.add({
+        targets: birdRoot,
+        scaleY: { from: scale * 0.86, to: scale * 1.12 },
+        duration: flapDuration,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+    }
 
-    // 3. Gentle In-flight Banking / Tilt Sway
+    // 3. Realistic Tail Wag & Sway
+    if (tailSprite) {
+      container.tailTween = scene.tweens.add({
+        targets: tailSprite,
+        angle: { from: -7, to: 9 },
+        duration: 500 + (index % 2) * 80,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+    }
+
+    // 4. Subtle Feet Hovering Tuck
+    if (feetSprite) {
+      container.feetTween = scene.tweens.add({
+        targets: feetSprite,
+        y: { from: 108, to: 116 },
+        duration: 540,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+    }
+
+    // 5. Subtle Body Breathing
+    if (bodySprite) {
+      container.bodyTween = scene.tweens.add({
+        targets: bodySprite,
+        scaleY: { from: 0.96, to: 1.03 },
+        duration: 820,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+    }
+
+    // 6. Gentle In-flight Banking / Tilt Sway
     const tiltDuration = 1250 + (index % 3) * 160;
     container.tiltTween = scene.tweens.add({
       targets: birdRoot,
-      angle: { from: -5 * facingDir, to: 6 * facingDir },
+      angle: { from: -4, to: 5 },
       duration: tiltDuration,
       yoyo: true,
       repeat: -1,
       ease: "Sine.easeInOut",
     });
 
-    // 4. Dedicated High-Speed Flying Method along Random Curved Paths (Triggered after clicking number)
+    // 7. Dedicated High-Speed Flying Method along Random Curved Paths (Triggered after clicking number)
     container.flyTo = (targetX, targetY, options = {}) => {
       const duration = options.duration || 680;
       const delay = options.delay || 0;
@@ -93,7 +182,7 @@ export default class SpineBird {
       // Clean up idle floating & tilt tweens safely
       if (container.bobTween) container.bobTween.stop();
       if (container.tiltTween) container.tiltTween.stop();
-      if (container.flapTween) container.flapTween.stop();
+      if (container.bodyTween) container.bodyTween.stop();
 
       // Fade out and remove counter badges cleanly
       if (container.badges && container.badges.length > 0) {
@@ -110,14 +199,28 @@ export default class SpineBird {
       }
 
       // Fast, vigorous flight wing flapping flutter
-      container.fastFlapTween = scene.tweens.add({
-        targets: birdRoot,
-        scaleY: { from: scale * 0.76, to: scale * 1.22 },
-        duration: 75,
-        yoyo: true,
-        repeat: -1,
-        ease: "Sine.easeInOut",
-      });
+      if (wingSprite) {
+        if (container.wingTween) container.wingTween.stop();
+        scene.tweens.add({
+          targets: wingSprite,
+          angle: { from: -40, to: 44 },
+          scaleY: { from: 0.75, to: 1.2 },
+          duration: 75,
+          yoyo: true,
+          repeat: -1,
+          ease: "Sine.easeInOut",
+        });
+      } else if (container.flapTween) {
+        container.flapTween.stop();
+        scene.tweens.add({
+          targets: birdRoot,
+          scaleY: { from: scale * 0.75, to: scale * 1.22 },
+          duration: 75,
+          yoyo: true,
+          repeat: -1,
+          ease: "Sine.easeInOut",
+        });
+      }
 
       // Generate randomized organic 3D-like curved trajectory
       const startX = container.x;
@@ -191,7 +294,6 @@ export default class SpineBird {
         },
         onComplete: () => {
           trailTimer.remove();
-          if (container.fastFlapTween) container.fastFlapTween.stop();
           if (onComplete) onComplete();
           container.destroy();
         },
@@ -218,14 +320,16 @@ export default class SpineBird {
         }
 
         // Rapid Joyful Wing Flutter on Tap
-        scene.tweens.add({
-          targets: birdRoot,
-          scaleY: scale * 1.25,
-          duration: 80,
-          yoyo: true,
-          repeat: 3,
-          ease: "Sine.easeInOut",
-        });
+        if (wingSprite) {
+          scene.tweens.add({
+            targets: wingSprite,
+            angle: { from: -38, to: 42 },
+            duration: 75,
+            yoyo: true,
+            repeat: 4,
+            ease: "Sine.easeInOut",
+          });
+        }
 
         // Joyful Chirp Hop & Bounce
         scene.tweens.add({
@@ -271,6 +375,7 @@ export default class SpineBird {
     return container;
   }
 }
+
 
 
 
