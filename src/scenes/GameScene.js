@@ -832,126 +832,138 @@ export default class GameScene extends Phaser.Scene {
 
     let scoreIncremented = false;
 
-    this.currentStars.forEach((item, idx) => {
-      item.isFlying = true;
-
-      // Clean up idle floating/bobbing
-      this.tweens.killTweensOf(item);
-      if (item.flapTimer) item.flapTimer.remove();
-      if (item.list && item.list.length > 0) {
-        this.tweens.killTweensOf(item.list[0]);
-        item.list[0].setAngle(0);
-        if (item.list.length > 1) {
-          const extraChildren = item.list.slice(1);
-          extraChildren.forEach((child) => child.destroy());
-        }
+    const handleItemArrival = (idx) => {
+      // Play count audio, pop, & twinkle / chirp
+      SoundManager.playPop();
+      SoundManager.playCount(idx + 1);
+      if (this.gameMode === "birds") {
+        SoundManager.playBirdChirp();
+      } else {
+        SoundManager.playStarTwinkle();
       }
-      item.setDepth(150);
 
-      // Fast flight animation
-      const spr = item.starSprite || item.birdSprite || item.list[0];
-      if (spr) {
+      // Sparkle burst at the score badge
+      this.starParticles.emitParticleAt(targetX, targetY, 12);
+
+      // Punch and zoom the Score Badge for EVERY item collected!
+      this.punchScoreBadge(1.22, 85);
+
+      // When all items are collected into the Score Badge, increase score by 1 point
+      if (idx === totalItems - 1 && !scoreIncremented) {
+        scoreIncremented = true;
+        this.score++;
+        this.starCount = this.score;
+        this.birdCount = this.score;
+        this.appleCount = this.score;
+        this.scoreText.setText(`${this.score}`);
+
+        SoundManager.playStarChime();
+
+        // Extra celebratory punch when score point increments
+        this.punchScoreBadge(1.28, 110);
+
+        // Score text joyful bounce
+        this.tweens.killTweensOf(this.scoreText);
+        this.scoreText.setScale(1);
         this.tweens.add({
-          targets: spr,
-          angle: "+=720",
-          duration: 520,
-          ease: "Linear",
+          targets: this.scoreText,
+          scale: 1.45,
+          duration: 120,
+          yoyo: true,
+          ease: "Back.easeOut",
+        });
+
+        // Golden sparkle burst at score number
+        this.starParticles.emitParticleAt(
+          this.scoreContainer ? this.scoreContainer.x + 40 : 520,
+          this.scoreContainer ? this.scoreContainer.y + 18 : 118,
+          14,
+        );
+
+        // Transition after brief celebration pause
+        this.time.delayedCall(600, () => {
+          if (this.streak > 0 && this.streak % 5 === 0) {
+            this.scene.pause("GameScene");
+            this.scene.launch("WellDoneScene", {
+              level: this.level,
+              gameMode: this.gameMode,
+              baskets: this.baskets,
+              score: this.score,
+              starCount: this.starCount,
+              birdCount: this.starCount,
+              appleCount: this.starCount,
+              streak: this.streak,
+              timeLeft: this.timeLeft,
+              timePlayed: 120 - this.timeLeft,
+            });
+          } else {
+            this.nextQuestion();
+          }
         });
       }
+    };
 
-      // Trailing sparkle timer
-      const trailTimer = this.time.addEvent({
-        delay: 60,
-        callback: () => {
-          if (!item.active) return;
-          this.starParticles.emitParticleAt(item.x, item.y, 1);
-        },
-        loop: true,
-      });
+    this.currentStars.forEach((item, idx) => {
+      if (typeof item.flyTo === "function") {
+        // Spine Bird with articulated flight & rapid wing flapping
+        item.flyTo(targetX, targetY, {
+          duration: 540,
+          delay: idx * 130,
+          onComplete: () => handleItemArrival(idx),
+        });
+      } else {
+        item.isFlying = true;
 
-      // Smooth flight arc up to the Score Badge
-      this.tweens.add({
-        targets: item,
-        x: targetX,
-        y: targetY,
-        scale: 0.3,
-        duration: 520,
-        delay: idx * 130,
-        ease: "Power2.easeIn",
-        onComplete: () => {
-          trailTimer.remove();
-          item.destroy();
-
-          // Play count audio, pop, & twinkle / chirp
-          SoundManager.playPop();
-          SoundManager.playCount(idx + 1);
-          if (this.gameMode === "birds") {
-            SoundManager.playBirdChirp();
-          } else {
-            SoundManager.playStarTwinkle();
+        // Clean up idle floating/bobbing
+        this.tweens.killTweensOf(item);
+        if (item.flapTimer) item.flapTimer.remove();
+        if (item.list && item.list.length > 0) {
+          this.tweens.killTweensOf(item.list[0]);
+          item.list[0].setAngle(0);
+          if (item.list.length > 1) {
+            const extraChildren = item.list.slice(1);
+            extraChildren.forEach((child) => child.destroy());
           }
+        }
+        item.setDepth(150);
 
-          // Sparkle burst at the score badge
-          this.starParticles.emitParticleAt(targetX, targetY, 12);
+        // Fast rotation animation for stars
+        const spr = item.starSprite || item.birdSprite || item.list[0];
+        if (spr) {
+          this.tweens.add({
+            targets: spr,
+            angle: "+=720",
+            duration: 520,
+            ease: "Linear",
+          });
+        }
 
-          // Punch and zoom the Score Badge for EVERY item collected!
-          this.punchScoreBadge(1.22, 85);
+        // Trailing sparkle timer
+        const trailTimer = this.time.addEvent({
+          delay: 60,
+          callback: () => {
+            if (!item.active) return;
+            this.starParticles.emitParticleAt(item.x, item.y, 1);
+          },
+          loop: true,
+        });
 
-          // When items are collected into the Score Badge, increase score by 1 point
-          if (idx === totalItems - 1 && !scoreIncremented) {
-            scoreIncremented = true;
-            this.score++;
-            this.starCount = this.score;
-            this.birdCount = this.score;
-            this.appleCount = this.score;
-            this.scoreText.setText(`${this.score}`);
-
-            SoundManager.playStarChime();
-
-            // Extra celebratory punch when score point increments
-            this.punchScoreBadge(1.28, 110);
-
-            // Score text joyful bounce
-            this.tweens.killTweensOf(this.scoreText);
-            this.scoreText.setScale(1);
-            this.tweens.add({
-              targets: this.scoreText,
-              scale: 1.45,
-              duration: 120,
-              yoyo: true,
-              ease: "Back.easeOut",
-            });
-
-            // Golden sparkle burst at score number
-            this.starParticles.emitParticleAt(
-              this.scoreContainer ? this.scoreContainer.x + 40 : 520,
-              this.scoreContainer ? this.scoreContainer.y + 18 : 118,
-              14,
-            );
-
-            // Transition after brief celebration pause
-            this.time.delayedCall(600, () => {
-              if (this.streak > 0 && this.streak % 5 === 0) {
-                this.scene.pause("GameScene");
-                this.scene.launch("WellDoneScene", {
-                  level: this.level,
-                  gameMode: this.gameMode,
-                  baskets: this.baskets,
-                  score: this.score,
-                  starCount: this.starCount,
-                  birdCount: this.starCount,
-                  appleCount: this.starCount,
-                  streak: this.streak,
-                  timeLeft: this.timeLeft,
-                  timePlayed: 120 - this.timeLeft,
-                });
-              } else {
-                this.nextQuestion();
-              }
-            });
-          }
-        },
-      });
+        // Smooth flight arc up to the Score Badge
+        this.tweens.add({
+          targets: item,
+          x: targetX,
+          y: targetY,
+          scale: 0.3,
+          duration: 520,
+          delay: idx * 130,
+          ease: "Power2.easeIn",
+          onComplete: () => {
+            trailTimer.remove();
+            item.destroy();
+            handleItemArrival(idx);
+          },
+        });
+      }
     });
   }
 

@@ -89,16 +89,23 @@ export default class SpineBird {
     container.birdRoot = birdRoot;
     container.birdSprite = birdRoot;
     container.starSprite = birdRoot; // compatibility alias
+    container.wingSprite = wingSprite;
+    container.wingTipSprite = wingTipSprite;
+    container.tailSprite = tailSprite;
+    container.feetSprite = feetSprite;
+    container.bodySprite = bodySprite;
+    container.beakSprite = beakSprite;
     container.birdIndex = index;
     container.starIndex = index; // compatibility alias
     container.isCounted = false;
     container.baseScale = scale;
     container.baseX = x;
     container.baseY = y;
+    container.badges = [];
 
-    // 1. Fluid Flying / Hovering Bobbing Animation
+    // 1. Smooth Flight Hovering & Bobbing
     const bobOffset = config.bobOffset !== undefined ? config.bobOffset : 14;
-    const bobDuration = 800 + (index % 3) * 140;
+    const bobDuration = 900 + (index % 3) * 140;
 
     container.bobTween = scene.tweens.add({
       targets: birdRoot,
@@ -109,13 +116,13 @@ export default class SpineBird {
       ease: "Sine.easeInOut",
     });
 
-    // 2. Realistic Spine Wing Flap & Tip Oscillation
-    const flapDuration = 280 + (index % 3) * 35;
+    // 2. Realistic Smooth Spine Wing Flap & Tip Oscillation
+    const flapDuration = 260 + (index % 3) * 30;
     if (wingSprite) {
       container.wingTween = scene.tweens.add({
         targets: wingSprite,
-        angle: { from: -20, to: 28 },
-        scaleY: { from: 0.82, to: 1.12 },
+        angle: { from: -22, to: 28 },
+        scaleY: { from: 0.84, to: 1.12 },
         duration: flapDuration,
         yoyo: true,
         repeat: -1,
@@ -125,8 +132,8 @@ export default class SpineBird {
       if (wingTipSprite) {
         container.wingTipTween = scene.tweens.add({
           targets: wingTipSprite,
-          angle: { from: -15, to: 22 },
-          y: { from: -105, to: -118 },
+          angle: { from: -16, to: 22 },
+          y: { from: -106, to: -116 },
           duration: flapDuration,
           yoyo: true,
           repeat: -1,
@@ -147,10 +154,10 @@ export default class SpineBird {
 
     // 3. Tail Wag & Sway
     if (tailSprite) {
-      scene.tweens.add({
+      container.tailTween = scene.tweens.add({
         targets: tailSprite,
         angle: { from: -8, to: 10 },
-        duration: 540 + (index % 2) * 80,
+        duration: 520 + (index % 2) * 80,
         yoyo: true,
         repeat: -1,
         ease: "Sine.easeInOut",
@@ -159,18 +166,18 @@ export default class SpineBird {
 
     // 4. Subtle Body Breathing
     if (bodySprite) {
-      scene.tweens.add({
+      container.bodyTween = scene.tweens.add({
         targets: bodySprite,
         scaleY: { from: 0.96, to: 1.04 },
-        duration: 900,
+        duration: 850,
         yoyo: true,
         repeat: -1,
         ease: "Sine.easeInOut",
       });
     }
 
-    // 5. Gentle Flight Banking / Tilt Sway
-    const tiltDuration = 1200 + (index % 3) * 180;
+    // 5. Gentle In-flight Banking / Tilt Sway
+    const tiltDuration = 1300 + (index % 3) * 160;
     container.tiltTween = scene.tweens.add({
       targets: birdRoot,
       angle: { from: -4, to: 5 },
@@ -179,6 +186,97 @@ export default class SpineBird {
       repeat: -1,
       ease: "Sine.easeInOut",
     });
+
+    // 6. Dedicated High-Speed Flying Method (Triggered after clicking correct number)
+    container.flyTo = (targetX, targetY, options = {}) => {
+      const duration = options.duration || 580;
+      const delay = options.delay || 0;
+      const onComplete = options.onComplete || (() => {});
+
+      container.isFlying = true;
+      container.setDepth(150);
+
+      // Clean up idle floating & tilt tweens safely
+      if (container.bobTween) container.bobTween.stop();
+      if (container.tiltTween) container.tiltTween.stop();
+      if (container.bodyTween) container.bodyTween.stop();
+
+      // Fade out and remove counter badges cleanly
+      if (container.badges && container.badges.length > 0) {
+        container.badges.forEach((b) => {
+          scene.tweens.add({
+            targets: b,
+            alpha: 0,
+            scale: 0,
+            duration: 150,
+            onComplete: () => b.destroy(),
+          });
+        });
+        container.badges = [];
+      }
+
+      // Fast, dynamic flight wing flapping
+      if (wingSprite) {
+        if (container.wingTween) container.wingTween.stop();
+        scene.tweens.add({
+          targets: wingSprite,
+          angle: { from: -38, to: 42 },
+          scaleY: { from: 0.78, to: 1.18 },
+          duration: 90,
+          yoyo: true,
+          repeat: -1,
+          ease: "Sine.easeInOut",
+        });
+
+        if (wingTipSprite && container.wingTipTween) {
+          container.wingTipTween.stop();
+          scene.tweens.add({
+            targets: wingTipSprite,
+            angle: { from: -24, to: 28 },
+            duration: 90,
+            yoyo: true,
+            repeat: -1,
+            ease: "Sine.easeInOut",
+          });
+        }
+      }
+
+      // Bank bird gracefully upward along flight path
+      scene.tweens.add({
+        targets: birdRoot,
+        angle: -16,
+        duration: 200,
+        ease: "Quad.easeOut",
+      });
+
+      // Trailing sparkle trail
+      const trailTimer = scene.time.addEvent({
+        delay: 50,
+        callback: () => {
+          if (!container.active) return;
+          if (scene.starParticles) {
+            scene.starParticles.emitParticleAt(container.x, container.y, 2);
+          }
+        },
+        loop: true,
+      });
+
+      // Smooth flight trajectory swooping to target
+      scene.tweens.add({
+        targets: container,
+        x: targetX,
+        y: targetY,
+        scale: scale * 0.45,
+        duration: duration,
+        delay: delay,
+        ease: "Cubic.easeInOut",
+        onComplete: () => {
+          trailTimer.remove();
+          if (onComplete) onComplete();
+          container.destroy();
+        },
+      });
+    };
 
     if (isInteractive) {
       container.setInteractive(
@@ -203,8 +301,8 @@ export default class SpineBird {
         if (wingSprite) {
           scene.tweens.add({
             targets: wingSprite,
-            angle: { from: -32, to: 38 },
-            duration: 90,
+            angle: { from: -36, to: 42 },
+            duration: 80,
             yoyo: true,
             repeat: 4,
             ease: "Sine.easeInOut",
@@ -241,6 +339,7 @@ export default class SpineBird {
           .setScale(0);
 
         container.add([badge, badgeText]);
+        container.badges.push(badge, badgeText);
 
         scene.tweens.add({
           targets: [badge, badgeText],
@@ -254,4 +353,5 @@ export default class SpineBird {
     return container;
   }
 }
+
 
