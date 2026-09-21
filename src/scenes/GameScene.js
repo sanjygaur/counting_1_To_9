@@ -228,12 +228,12 @@ export default class GameScene extends Phaser.Scene {
   }
 
   createFeedbackBanner(width) {
-    this.bannerContainer = this.add.container(width / 2, 195).setAlpha(0);
+    this.bannerContainer = this.add.container(width / 2, 285).setDepth(65).setAlpha(0);
     const bg = this.add.graphics();
-    bg.fillStyle(0x263238, 0.94);
-    bg.fillRoundedRect(-460, -36, 920, 72, 22);
-    bg.lineStyle(4, 0xffeb3b, 1);
-    bg.strokeRoundedRect(-460, -36, 920, 72, 22);
+    bg.fillStyle(0x1e293b, 0.94);
+    bg.fillRoundedRect(-440, -36, 880, 72, 22);
+    bg.lineStyle(4, 0xfacc15, 1);
+    bg.strokeRoundedRect(-440, -36, 880, 72, 22);
 
     const initialText =
       this.gameMode === "birds"
@@ -243,7 +243,7 @@ export default class GameScene extends Phaser.Scene {
     this.bannerText = this.add
       .text(0, 0, initialText, {
         fontFamily: "Comic Sans MS, Quicksand, sans-serif",
-        fontSize: "30px",
+        fontSize: "28px",
         fontStyle: "bold",
         color: "#ffffff",
       })
