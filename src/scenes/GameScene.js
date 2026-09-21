@@ -8,13 +8,8 @@ export default class GameScene extends Phaser.Scene {
   }
 
   init(data) {
-    this.level = data && typeof data.level === "number" ? data.level : 1;
-    this.gameMode =
-      data && data.gameMode
-        ? data.gameMode
-        : this.level === 2
-          ? "birds"
-          : "stars";
+    this.level = data && typeof data.level === "number" ? data.level : 2;
+    this.gameMode = data && data.gameMode ? data.gameMode : "birds";
     this.score = data && typeof data.score === "number" ? data.score : 0;
     this.starCount =
       data && typeof data.starCount === "number"

@@ -106,7 +106,18 @@ export default class MenuScene extends Phaser.Scene {
         onComplete: () => {
           this.cameras.main.fade(280, 255, 255, 255);
           this.time.delayedCall(280, () => {
-            this.scene.start("LevelSelectScene");
+            this.scene.start("GameScene", {
+              level: 2,
+              gameMode: "birds",
+              score: 0,
+              starCount: 0,
+              birdCount: 0,
+              appleCount: 0,
+              timeLeft: 120,
+              streak: 0,
+              totalAnswered: 0,
+              sequenceStep: 0,
+            });
           });
         },
       });

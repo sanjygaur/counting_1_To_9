@@ -70,7 +70,7 @@ export default class PreloaderScene extends Phaser.Scene {
     progressBar.setMask(barMask);
 
     const title = this.add
-      .text(width / 2, barY - 80, "Loading Stars Counting...", {
+      .text(width / 2, barY - 80, "Loading Birds Counting...", {
         fontFamily: '"Fredoka", "Arial Black", "Comic Sans MS", sans-serif',
         fontSize: "42px",
         fontStyle: "900",

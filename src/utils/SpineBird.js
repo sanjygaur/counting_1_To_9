@@ -174,7 +174,7 @@ export default class SpineBird {
     container.flyTo = (targetX, targetY, options = {}) => {
       const duration = options.duration || 680;
       const delay = options.delay || 0;
-      const onComplete = options.onComplete || (() => {});
+      const onComplete = options.onComplete || (() => { });
 
       container.isFlying = true;
       container.setDepth(150);
