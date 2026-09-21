@@ -152,7 +152,8 @@ export default class PreloaderScene extends Phaser.Scene {
     this.load.image("btn_game_mute", "/assets/gameScene/mute.avif");
     this.load.image("btn_game_unmute", "/assets/gameScene/unmute.avif");
 
-    // 3b. Spine Bird Assets (from assets/spine_bird/)
+    // 3b. Level 2 Desert Background & Spine Bird Assets
+    this.load.image("bg_desert", "/assets/gameScene/bg_desert.jpg");
     this.load.image("spine_bird_full", "/assets/spine_bird/00_bird_reference_transparent.png");
     this.load.image("spine_bird_body", "/assets/spine_bird/01_body_head.png");
     this.load.image("spine_bird_wing", "/assets/spine_bird/02_main_wing.png");
