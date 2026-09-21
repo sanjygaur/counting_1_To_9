@@ -170,6 +170,15 @@ export default class PreloaderScene extends Phaser.Scene {
     this.load.image("level2_howtoplay_btn", "/assets/level2/howtoplay.avif");
     this.load.image("level2_numbers", "/assets/level2/numbers.avif");
 
+    // 3c. Spine Bird Assets (from assets/spine_bird/)
+    this.load.image("spine_bird_full", "/assets/spine_bird/00_bird_reference_transparent.png");
+    this.load.image("spine_bird_body", "/assets/spine_bird/01_body_head.png");
+    this.load.image("spine_bird_wing", "/assets/spine_bird/02_main_wing.png");
+    this.load.image("spine_bird_wing_tip", "/assets/spine_bird/03_wing_tip.png");
+    this.load.image("spine_bird_tail", "/assets/spine_bird/04_tail.png");
+    this.load.image("spine_bird_beak", "/assets/spine_bird/05_beak.png");
+    this.load.image("spine_bird_feet", "/assets/spine_bird/06_feet.png");
+
     // 3c. Pause Scene / Modal Assets
     this.load.image("popup_game_paused", "/assets/pauseScene/GamePaused.avif");
     this.load.image("btn_pause_resume", "/assets/pauseScene/resume.avif");

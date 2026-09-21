@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import SoundManager from "../utils/SoundManager.js";
+import SpineBird from "../utils/SpineBird.js";
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -605,118 +606,19 @@ export default class GameScene extends Phaser.Scene {
     const layout = this.getStarLayout(count);
 
     layout.forEach((pos, idx) => {
-      const birdContainer = this.add.container(pos.x, pos.y);
-
-      let birdScale = 1.0;
+      let birdScale = 0.32;
       if (count <= 4) {
-        birdScale = 1.05;
+        birdScale = 0.35;
       } else if (count <= 6) {
-        birdScale = 0.95;
+        birdScale = 0.30;
       } else {
-        birdScale = 0.86;
+        birdScale = 0.26;
       }
 
-      // Use Level 2 dedicated bird texture (assets/level2/Play2/bird.avif)
-      const birdTexture = "level2_bird";
-      const birdSprite = this.add.image(0, 0, birdTexture).setScale(birdScale);
-
-      birdContainer.add(birdSprite);
-      birdContainer.setSize(140, 140);
-      birdContainer.setInteractive(
-        new Phaser.Geom.Rectangle(0, 0, 140, 140),
-        Phaser.Geom.Rectangle.Contains,
-      );
-      birdContainer.input.cursor = "pointer";
-      birdContainer.starIndex = idx + 1;
-      birdContainer.birdIndex = idx + 1;
-      birdContainer.isCounted = false;
-      birdContainer.starSprite = birdSprite;
-      birdContainer.birdSprite = birdSprite;
-      birdContainer.baseScale = birdScale;
-
-      // Gentle vertical hovering / bobbing
-      const bobDuration = 900 + (idx % 3) * 140;
-      this.tweens.add({
-        targets: birdSprite,
-        y: { from: -12, to: 12 },
-        duration: bobDuration,
-        yoyo: true,
-        repeat: -1,
-        ease: "Sine.easeInOut",
-      });
-
-      // Gentle floating wing flutter animation (scaling without texture swapping)
-      this.tweens.add({
-        targets: birdSprite,
-        scaleY: { from: birdScale * 0.94, to: birdScale * 1.06 },
-        duration: 400 + (idx % 3) * 80,
-        yoyo: true,
-        repeat: -1,
-        ease: "Quad.easeInOut",
-      });
-
-      // Subtle angle sway
-      this.tweens.add({
-        targets: birdSprite,
-        angle: { from: -4, to: 4 },
-        duration: 1100 + (idx % 3) * 120,
-        yoyo: true,
-        repeat: -1,
-        ease: "Sine.easeInOut",
-      });
-
-      // Interactive Touch-to-Count mechanic
-      birdContainer.on("pointerdown", () => {
-        if (this.isInputLocked || this.isPaused || birdContainer.isCounted)
-          return;
-        this.tappedCount++;
-        birdContainer.isCounted = true;
-
-        SoundManager.playBirdChirp();
-        SoundManager.playCount(this.tappedCount);
-
-        // Sparkle particles at bird
-        this.starParticles.emitParticleAt(pos.x, pos.y, 8);
-
-        // Joyful hop & flip
-        this.tweens.add({
-          targets: birdSprite,
-          y: birdSprite.y - 25,
-          scaleY: birdScale * 1.2,
-          scaleX: birdScale * 1.15,
-          duration: 160,
-          yoyo: true,
-          ease: "Back.easeOut",
-        });
-
-        this.tweens.add({
-          targets: birdContainer,
-          scale: 1.25,
-          duration: 110,
-          yoyo: true,
-          ease: "Quad.easeInOut",
-        });
-
-        // Add count badge above the bird
-        const badge = this.add.image(0, -66, "badge_count").setScale(0);
-        const badgeText = this.add
-          .text(0, -66, `${this.tappedCount}`, {
-            fontFamily: '"Fredoka", "Arial Black", "Comic Sans MS", sans-serif',
-            fontSize: "30px",
-            fontStyle: "900",
-            color: "#0369a1",
-          })
-          .setOrigin(0.5)
-          .setScale(0);
-
-        birdContainer.add([badge, badgeText]);
-
-        this.tweens.add({
-          targets: [badge, badgeText],
-          scale: 1.15,
-          duration: 220,
-          ease: "Back.easeOut",
-        });
+      const birdContainer = SpineBird.create(this, pos.x, pos.y, {
+        scale: birdScale,
+        index: idx + 1,
+        interactive: true,
       });
 
       this.currentStars.push(birdContainer);
@@ -1190,11 +1092,12 @@ export default class GameScene extends Phaser.Scene {
     card.fillRoundedRect(-325, -164, 650, 20, 10);
 
     // 3. Icon with gentle breathing pulse
-    const iconKey = this.gameMode === "birds" ? "bird1" : "star";
-    const itemIcon = this.add.image(0, -78, iconKey).setScale(0.65);
+    const iconKey = this.gameMode === "birds" ? "spine_bird_full" : "star";
+    const iconScale = this.gameMode === "birds" ? 0.24 : 0.65;
+    const itemIcon = this.add.image(0, -78, iconKey).setScale(iconScale);
     this.tweens.add({
       targets: itemIcon,
-      scale: 0.72,
+      scale: iconScale * 1.1,
       angle: { from: -4, to: 4 },
       duration: 600,
       yoyo: true,

@@ -213,7 +213,7 @@ export default class LevelSelectScene extends Phaser.Scene {
       title: "Bird Counting",
       emoji: "🐦",
       description: "Count the cute singing birds in the meadow!",
-      iconKey: "level2_bird",
+      iconKey: "spine_bird_full",
       isBird: true,
       bgColor1: 0xf0fdf4,
       bgColor2: 0xdcfce7,
@@ -276,7 +276,8 @@ export default class LevelSelectScene extends Phaser.Scene {
     iconBg.lineStyle(5, accentColor, 1);
     iconBg.strokeCircle(0, 0, 95);
 
-    const sprite = this.add.image(0, 0, iconKey).setScale(isBird ? 1.15 : 1.05);
+    const baseScale = isBird ? 0.28 : 1.05;
+    const sprite = this.add.image(0, 0, iconKey).setScale(baseScale);
 
     if (isBird) {
       // Bobbing & wing breathing animation
@@ -291,8 +292,9 @@ export default class LevelSelectScene extends Phaser.Scene {
 
       this.tweens.add({
         targets: sprite,
-        scaleY: { from: 1.08, to: 1.22 },
-        duration: 450,
+        scaleY: { from: baseScale * 0.92, to: baseScale * 1.08 },
+        scaleX: { from: baseScale * 1.04, to: baseScale * 0.96 },
+        duration: 400,
         yoyo: true,
         repeat: -1,
         ease: "Quad.easeInOut",
