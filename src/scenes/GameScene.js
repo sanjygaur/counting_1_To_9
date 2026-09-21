@@ -769,22 +769,22 @@ export default class GameScene extends Phaser.Scene {
     const cheers =
       this.gameMode === "birds"
         ? [
-            "LOVELY BIRDS! 🐦",
-            "GREAT JOB! 🎉",
-            "CORRECT! 🌟",
-            "SUPER BIRDS! 🕊️",
-            "AWESOME! 👏",
-            "EXCELLENT! ✨",
-          ]
+          "LOVELY BIRDS! 🐦",
+          "GREAT JOB! 🎉",
+          "CORRECT! 🌟",
+          "SUPER BIRDS! 🕊️",
+          "AWESOME! 👏",
+          "EXCELLENT! ✨",
+        ]
         : [
-            "AWESOME! ⭐",
-            "GREAT JOB! 🌟",
-            "CORRECT! 🎉",
-            "SUPER STARS! ✨",
-            "LOVELY STARS! 💫",
-            "EXCELLENT! 🎈",
-            "BRAVO! 👏",
-          ];
+          "AWESOME! ⭐",
+          "GREAT JOB! 🌟",
+          "CORRECT! 🎉",
+          "SUPER STARS! ✨",
+          "LOVELY STARS! 💫",
+          "EXCELLENT! 🎈",
+          "BRAVO! 👏",
+        ];
     const cheerPhrase = Phaser.Utils.Array.GetRandom(cheers);
 
     const cheerText = this.add

@@ -265,9 +265,9 @@ export default class TextureGenerator {
   static createButtons(scene) {
     const states = [
       { key: 'btn_default', top: '#ffb300', bot: '#f57c00', border: '#b26a00' },
-      { key: 'btn_hover',   top: '#ffd54f', bot: '#ff9800', border: '#e65100' },
+      { key: 'btn_hover', top: '#ffd54f', bot: '#ff9800', border: '#e65100' },
       { key: 'btn_correct', top: '#81c784', bot: '#388e3c', border: '#1b5e20' },
-      { key: 'btn_wrong',   top: '#e57373', bot: '#d32f2f', border: '#b71c1c' }
+      { key: 'btn_wrong', top: '#e57373', bot: '#d32f2f', border: '#b71c1c' }
     ];
 
     states.forEach(s => {
