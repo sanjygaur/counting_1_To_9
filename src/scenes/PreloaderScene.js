@@ -136,7 +136,7 @@ export default class PreloaderScene extends Phaser.Scene {
     this.load.image("apple_real", "/assets/menuScene/apple.avif");
     this.load.image("apple_count", "/assets/gameScene/Background.avif");
 
-    // 3. Game Scene Assets
+    // 3. Game Scene Assets (Level 1: Stars)
     this.load.image("star", "/assets/gameScene/star.avif");
     this.load.image("star_item", "/assets/gameScene/star.avif");
     this.load.image("bird1", "/assets/gameScene/birds1.avif");
@@ -145,14 +145,10 @@ export default class PreloaderScene extends Phaser.Scene {
       "banner_howmany_birds",
       "/assets/gameScene/Background.avif",
     );
-    // this.load.image("header_bg", "/assets/gameScene/headerBg.avif");
-    // this.load.image("tree_real", "/assets/gameScene/trees.avif");
-    // this.load.image("basket_real", "/assets/gameScene/Basket.avif");
     this.load.image("box1", "/assets/gameScene/box.avif");
     this.load.image("box2", "/assets/gameScene/box2.avif");
     this.load.image("box3", "/assets/gameScene/box3.avif");
     this.load.image("box4", "/assets/gameScene/box4.avif");
-    // this.load.image("panel_score", "/assets/gameScene/score.avif");
     this.load.image("panel_timer", "/assets/gameScene/timer.avif");
     this.load.image("panel_score", "/assets/gameScene/score.avif");
     this.load.image("btn_game_pause", "/assets/gameScene/resume.avif");
@@ -160,7 +156,21 @@ export default class PreloaderScene extends Phaser.Scene {
     this.load.image("btn_game_mute", "/assets/gameScene/mute.avif");
     this.load.image("btn_game_unmute", "/assets/gameScene/unmute.avif");
 
-    // 3b. Pause Scene / Modal Assets
+    // 3b. Level 2 Dedicated Assets (from assets/level2/ and assets/level2/Play2/)
+    this.load.image("bg_level2", "/assets/level2/Play2/Background.avif");
+    this.load.image("level2_menu_bg", "/assets/level2/Background.avif");
+    this.load.image("level2_bird", "/assets/level2/Play2/bird.avif");
+    this.load.image("level2_score", "/assets/level2/Play2/score.avif");
+    this.load.image("level2_time", "/assets/level2/Play2/time.avif");
+    this.load.image("level2_pause", "/assets/level2/Play2/pause.avif");
+    this.load.image("level2_resume", "/assets/level2/Play2/resume.avif");
+    this.load.image("level2_mute", "/assets/level2/Play2/mute.avif");
+    this.load.image("level2_unmute", "/assets/level2/Play2/unmute.avif");
+    this.load.image("level2_play_btn", "/assets/level2/play.avif");
+    this.load.image("level2_howtoplay_btn", "/assets/level2/howtoplay.avif");
+    this.load.image("level2_numbers", "/assets/level2/numbers.avif");
+
+    // 3c. Pause Scene / Modal Assets
     this.load.image("popup_game_paused", "/assets/pauseScene/GamePaused.avif");
     this.load.image("btn_pause_resume", "/assets/pauseScene/resume.avif");
     this.load.image("btn_pause_home", "/assets/pauseScene/Home.avif");

@@ -48,8 +48,10 @@ export default class GameScene extends Phaser.Scene {
     this.tappedCount = 0;
     this.currentCount = 0;
 
-    // 1. Shared Real Background (Open sky and meadow)
-    const background = this.add.image(width / 2, height / 2, "bg_main");
+    // 1. Shared / Level Specific Background
+    const isLevel2 = this.gameMode === "birds" || this.level === 2;
+    const bgKey = isLevel2 && this.textures.exists("bg_level2") ? "bg_level2" : "bg_main";
+    const background = this.add.image(width / 2, height / 2, bgKey);
     background.setDisplaySize(width, height);
 
     // Start or ensure background music is playing
@@ -102,8 +104,11 @@ export default class GameScene extends Phaser.Scene {
   }
 
   createHUD(width) {
-    // 1. Real Timer Panel
-    this.add.image(160, 100, "panel_timer").setScale(1).setDepth(6);
+    const isLevel2 = this.gameMode === "birds" || this.level === 2;
+
+    // 1. Timer Panel (level2_time for Level 2, panel_timer for Level 1)
+    const timerTexture = isLevel2 && this.textures.exists("level2_time") ? "level2_time" : "panel_timer";
+    this.add.image(160, 100, timerTexture).setScale(1).setDepth(6);
     this.timeText = this.add
       .text(200, 118, `${this.timeLeft}`, {
         fontFamily: "Comic Sans MS, Quicksand, sans-serif",
@@ -116,10 +121,10 @@ export default class GameScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(61);
 
-    // 2. Real Score Panel & Text inside a unified Score Container
+    // 2. Score Panel (level2_score for Level 2, panel_score for Level 1)
+    const scoreTexture = isLevel2 && this.textures.exists("level2_score") ? "level2_score" : "panel_score";
     this.scoreContainer = this.add.container(480, 100).setDepth(60);
-
-    this.scorePanel = this.add.image(0, 0, "panel_score").setScale(1);
+    this.scorePanel = this.add.image(0, 0, scoreTexture).setScale(1);
 
     this.scoreText = this.add
       .text(40, 18, `${this.score}`, {
@@ -134,16 +139,10 @@ export default class GameScene extends Phaser.Scene {
 
     this.scoreContainer.add([this.scorePanel, this.scoreText]);
 
-    // If Level 2 (Birds), show cute bird icon atop the score panel star
-    if (this.gameMode === "birds") {
-      const hudBird = this.add.image(-70, 0, "bird1").setScale(0.55);
-      this.scoreContainer.add(hudBird);
-    }
-
     // Interactive tap on score panel for a fun bounce
     this.scorePanel.setInteractive({ useHandCursor: true });
     this.scorePanel.on("pointerdown", () => {
-      if (this.gameMode === "birds") {
+      if (isLevel2) {
         SoundManager.playBirdChirp();
       } else {
         SoundManager.playStarTwinkle();
@@ -167,12 +166,15 @@ export default class GameScene extends Phaser.Scene {
     this.headerBirdCountText = this.scoreText;
     this.headerAppleCountText = this.scoreText;
 
-    // 4. Real Sound Toggle Button (gameScene/unmute.avif & mute.avif)
+    // 4. Sound Toggle Button (level2_mute / level2_unmute for Level 2, btn_game_mute / btn_game_unmute for Level 1)
+    const muteTexture = isLevel2 && this.textures.exists("level2_mute") ? "level2_mute" : "btn_game_mute";
+    const unmuteTexture = isLevel2 && this.textures.exists("level2_unmute") ? "level2_unmute" : "btn_game_unmute";
+
     this.soundBtn = this.add
       .image(
         810,
         100,
-        SoundManager.isMuted ? "btn_game_mute" : "btn_game_unmute",
+        SoundManager.isMuted ? muteTexture : unmuteTexture,
       )
       .setScale(1)
       .setDepth(60)
@@ -183,7 +185,7 @@ export default class GameScene extends Phaser.Scene {
       SoundManager.startBGM();
       const isMuted = SoundManager.toggleMute();
       this.sound.mute = isMuted;
-      this.soundBtn.setTexture(isMuted ? "btn_game_mute" : "btn_game_unmute");
+      this.soundBtn.setTexture(isMuted ? muteTexture : unmuteTexture);
       if (!isMuted) {
         SoundManager.playPop();
       }
@@ -196,9 +198,10 @@ export default class GameScene extends Phaser.Scene {
       });
     });
 
-    // 5. Real Pause Button (btn_game_pause) at header
+    // 5. Pause Button (level2_pause for Level 2, btn_game_pause for Level 1)
+    const pauseTexture = isLevel2 && this.textures.exists("level2_pause") ? "level2_pause" : "btn_game_pause";
     this.pauseBtn = this.add
-      .image(955, 100, "btn_game_pause")
+      .image(955, 100, pauseTexture)
       .setScale(0.88)
       .setDepth(60)
       .setInteractive({ useHandCursor: true });
@@ -613,8 +616,10 @@ export default class GameScene extends Phaser.Scene {
         birdScale = 0.86;
       }
 
-      // Alternate cute bird variations
-      const birdTexture = idx % 2 === 0 ? "bird1" : "bird2";
+      // Use Level 2 dedicated bird texture (assets/level2/Play2/bird.avif)
+      const mainBirdTexture = this.textures.exists("level2_bird") ? "level2_bird" : "bird1";
+      const altBirdTexture = this.textures.exists("bird2") ? "bird2" : mainBirdTexture;
+      const birdTexture = idx % 2 === 0 ? mainBirdTexture : (this.textures.exists("bird1") ? "bird1" : mainBirdTexture);
       const birdSprite = this.add.image(0, 0, birdTexture).setScale(birdScale);
 
       birdContainer.add(birdSprite);
@@ -649,7 +654,7 @@ export default class GameScene extends Phaser.Scene {
         callback: () => {
           if (birdSprite && birdSprite.active) {
             flapState = !flapState;
-            birdSprite.setTexture(flapState ? "bird2" : "bird1");
+            birdSprite.setTexture(flapState ? altBirdTexture : mainBirdTexture);
           }
         },
         loop: true,

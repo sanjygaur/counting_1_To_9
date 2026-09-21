@@ -213,7 +213,7 @@ export default class LevelSelectScene extends Phaser.Scene {
       title: "Bird Counting",
       emoji: "🐦",
       description: "Count the cute singing birds in the meadow!",
-      iconKey: "bird1",
+      iconKey: "level2_bird",
       isBird: true,
       bgColor1: 0xf0fdf4,
       bgColor2: 0xdcfce7,
