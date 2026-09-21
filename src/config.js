@@ -8,13 +8,13 @@ import GameOverScene from './scenes/GameOverScene.js';
 
 export const config = {
   type: Phaser.AUTO,
-  width: 1080,
-  height: 1920,
   parent: 'game-container',
   backgroundColor: '#74c7f8',
   scale: {
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: 1080,
+    height: 1920
   },
   scene: [
     BootScene,
