@@ -369,6 +369,183 @@ export default class SpineBird {
 
     return container;
   }
+
+  /**
+   * Create an adorable permanent resident bird living in the Birdhouse
+   * (e.g. nested in the straw, pecking seeds at the food bowl, or drinking water).
+   */
+  static createHouseResident(scene, x, y, config = {}) {
+    const scale = config.scale || 0.078;
+    const facingDir = config.facingDir !== undefined ? config.facingDir : 1;
+    const activity = config.activity || "nest";
+
+    const container = scene.add.container(x, y);
+    const birdRoot = scene.add.container(0, 0).setScale(scale * facingDir, scale);
+
+    let tailSprite;
+    let feetSprite;
+    let bodySprite;
+    let wingSprite;
+
+    const hasSpineParts =
+      scene.textures.exists("spine_bird_body") &&
+      scene.textures.exists("spine_bird_wing") &&
+      scene.textures.exists("spine_bird_tail");
+
+    if (hasSpineParts) {
+      tailSprite = scene.add
+        .image(116, 60, "spine_bird_tail")
+        .setOrigin(0.12, 0.51);
+      birdRoot.add(tailSprite);
+
+      if (scene.textures.exists("spine_bird_feet")) {
+        feetSprite = scene.add
+          .image(-26, 112, "spine_bird_feet")
+          .setOrigin(0.5, 0.16);
+        birdRoot.add(feetSprite);
+      }
+
+      bodySprite = scene.add
+        .image(-82, 4, "spine_bird_body")
+        .setOrigin(0.5, 0.5);
+      birdRoot.add(bodySprite);
+
+      wingSprite = scene.add
+        .image(-70, 18, "spine_bird_wing")
+        .setOrigin(0.17, 0.84);
+      birdRoot.add(wingSprite);
+    } else {
+      const textureKey = scene.textures.exists("spine_bird_full")
+        ? "spine_bird_full"
+        : "level2_bird";
+      bodySprite = scene.add.image(0, 0, textureKey).setOrigin(0.5, 0.5);
+      birdRoot.add(bodySprite);
+    }
+
+    container.add(birdRoot);
+    container.birdRoot = birdRoot;
+    container.wingSprite = wingSprite;
+    container.tailSprite = tailSprite;
+    container.bodySprite = bodySprite;
+
+    // Gentle breathing tween
+    if (bodySprite) {
+      scene.tweens.add({
+        targets: bodySprite,
+        scaleY: { from: 0.95, to: 1.05 },
+        duration: 900 + Math.random() * 300,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+    }
+
+    // Gentle tail twitch
+    if (tailSprite) {
+      scene.tweens.add({
+        targets: tailSprite,
+        angle: { from: -6, to: 8 },
+        duration: 700 + Math.random() * 400,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+    }
+
+    // Activity-specific behaviors
+    if (activity === "eating") {
+      // Periodic pecking down at seeds
+      scene.time.addEvent({
+        delay: 2400 + Math.random() * 1000,
+        loop: true,
+        callback: () => {
+          if (!container.active) return;
+          scene.tweens.add({
+            targets: birdRoot,
+            angle: facingDir === -1 ? -22 : 22,
+            y: 5,
+            duration: 160,
+            yoyo: true,
+            repeat: 2,
+            ease: "Quad.easeOut",
+          });
+        },
+      });
+    } else if (activity === "drinking") {
+      // Periodic dipping beak into water and tilting back to drink
+      scene.time.addEvent({
+        delay: 2800 + Math.random() * 1200,
+        loop: true,
+        callback: () => {
+          if (!container.active) return;
+          scene.tweens.add({
+            targets: birdRoot,
+            angle: facingDir === -1 ? -24 : 24,
+            y: 4,
+            duration: 220,
+            yoyo: true,
+            ease: "Quad.easeOut",
+            onComplete: () => {
+              scene.tweens.add({
+                targets: birdRoot,
+                angle: facingDir === -1 ? 16 : -16,
+                y: -3,
+                duration: 260,
+                yoyo: true,
+                ease: "Sine.easeInOut",
+              });
+            },
+          });
+        },
+      });
+    } else {
+      // Cozy Nest resting bob
+      scene.tweens.add({
+        targets: birdRoot,
+        y: { from: -2, to: 3 },
+        duration: 1100,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+    }
+
+    // Interactive tap on resident bird
+    container.setSize(80, 60);
+    container.setInteractive({ useHandCursor: true });
+    container.on("pointerdown", (pointer, localX, localY, event) => {
+      if (event && event.stopPropagation) event.stopPropagation();
+      SoundManager.playBirdChirp();
+      if (scene.starParticles && scene.scoreContainer) {
+        scene.starParticles.emitParticleAt(
+          scene.scoreContainer.x + container.x,
+          scene.scoreContainer.y + container.y,
+          6,
+        );
+      }
+      // Joyful hop & wing flutter
+      if (wingSprite) {
+        scene.tweens.add({
+          targets: wingSprite,
+          angle: { from: -35, to: 40 },
+          duration: 70,
+          yoyo: true,
+          repeat: 3,
+          ease: "Sine.easeInOut",
+        });
+      }
+      scene.tweens.add({
+        targets: birdRoot,
+        y: -10,
+        scale: scale * 1.22,
+        duration: 120,
+        yoyo: true,
+        ease: "Back.easeOut",
+      });
+    });
+
+    return container;
+  }
 }
 
 

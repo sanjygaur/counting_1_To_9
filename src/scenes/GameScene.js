@@ -135,7 +135,32 @@ export default class GameScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    this.scoreContainer.add([this.scorePanel, this.scoreText]);
+    // 3 Permanent Resident Birds in the Birdhouse
+    const nestBird = SpineBird.createHouseResident(this, 0, 10, {
+      scale: 0.08,
+      facingDir: 1,
+      activity: "nest",
+    });
+
+    const foodBird = SpineBird.createHouseResident(this, -42, 26, {
+      scale: 0.075,
+      facingDir: -1,
+      activity: "eating",
+    });
+
+    const waterBird = SpineBird.createHouseResident(this, 42, 26, {
+      scale: 0.075,
+      facingDir: 1,
+      activity: "drinking",
+    });
+
+    this.scoreContainer.add([
+      this.scorePanel,
+      this.scoreText,
+      nestBird,
+      foodBird,
+      waterBird,
+    ]);
 
     // Interactive tap on score birdhouse for a fun bounce
     this.scorePanel.setInteractive({ useHandCursor: true });
