@@ -187,9 +187,9 @@ export default class SpineBird {
       ease: "Sine.easeInOut",
     });
 
-    // 6. Dedicated High-Speed Flying Method (Triggered after clicking correct number)
+    // 6. Dedicated High-Speed Flying Method along Random Curved Paths (Triggered after clicking number)
     container.flyTo = (targetX, targetY, options = {}) => {
-      const duration = options.duration || 580;
+      const duration = options.duration || 680;
       const delay = options.delay || 0;
       const onComplete = options.onComplete || (() => {});
 
@@ -220,9 +220,9 @@ export default class SpineBird {
         if (container.wingTween) container.wingTween.stop();
         scene.tweens.add({
           targets: wingSprite,
-          angle: { from: -38, to: 42 },
-          scaleY: { from: 0.78, to: 1.18 },
-          duration: 90,
+          angle: { from: -40, to: 44 },
+          scaleY: { from: 0.75, to: 1.2 },
+          duration: 80,
           yoyo: true,
           repeat: -1,
           ease: "Sine.easeInOut",
@@ -232,8 +232,8 @@ export default class SpineBird {
           container.wingTipTween.stop();
           scene.tweens.add({
             targets: wingTipSprite,
-            angle: { from: -24, to: 28 },
-            duration: 90,
+            angle: { from: -26, to: 30 },
+            duration: 80,
             yoyo: true,
             repeat: -1,
             ease: "Sine.easeInOut",
@@ -241,17 +241,29 @@ export default class SpineBird {
         }
       }
 
-      // Bank bird gracefully upward along flight path
-      scene.tweens.add({
-        targets: birdRoot,
-        angle: -16,
-        duration: 200,
-        ease: "Quad.easeOut",
-      });
+      // Generate randomized organic 3D-like curved trajectory
+      const startX = container.x;
+      const startY = container.y;
+
+      // Randomize swooping curvature (alternating wide left/right swoops with loft and dips)
+      const isEven = (index % 2 === 0);
+      const sideDir = isEven ? 1 : -1;
+      const curveX1 = startX + sideDir * Phaser.Math.Between(180, 380);
+      const curveY1 = startY + Phaser.Math.Between(40, 220); // initial downward/lateral swoop
+
+      const curveX2 = targetX + (isEven ? -1 : 1) * Phaser.Math.Between(100, 280);
+      const curveY2 = targetY + Phaser.Math.Between(140, 360); // upward climb arch
+
+      const curve = new Phaser.Curves.CubicBezier(
+        new Phaser.Math.Vector2(startX, startY),
+        new Phaser.Math.Vector2(curveX1, curveY1),
+        new Phaser.Math.Vector2(curveX2, curveY2),
+        new Phaser.Math.Vector2(targetX, targetY)
+      );
 
       // Trailing sparkle trail
       const trailTimer = scene.time.addEvent({
-        delay: 50,
+        delay: 45,
         callback: () => {
           if (!container.active) return;
           if (scene.starParticles) {
@@ -261,15 +273,41 @@ export default class SpineBird {
         loop: true,
       });
 
-      // Smooth flight trajectory swooping to target
+      // Animate progress along the curve (0 to 1) with banking rotation
+      const progressObj = { t: 0 };
       scene.tweens.add({
-        targets: container,
-        x: targetX,
-        y: targetY,
-        scale: scale * 0.45,
+        targets: progressObj,
+        t: 1,
         duration: duration,
         delay: delay,
-        ease: "Cubic.easeInOut",
+        ease: "Sine.easeInOut",
+        onUpdate: () => {
+          if (!container.active) return;
+          const t = progressObj.t;
+          const pt = curve.getPoint(t);
+          const tangent = curve.getTangent(t);
+
+          container.setPosition(pt.x, pt.y);
+
+          // Smooth scale reduction towards target
+          const currentScale = Phaser.Math.Linear(scale, scale * 0.42, t);
+          
+          // Realistic dynamic banking tilt along flight velocity
+          if (tangent) {
+            const angleDeg = Phaser.Math.RadToDeg(Math.atan2(tangent.y, tangent.x));
+            if (tangent.x < 0) {
+              // Flying left (natural facing)
+              birdRoot.setScale(currentScale, currentScale);
+              const bankAngle = Phaser.Math.Clamp(angleDeg + 180, -35, 35);
+              birdRoot.setAngle(bankAngle);
+            } else {
+              // Flying right (flip horizontally)
+              birdRoot.setScale(-currentScale, currentScale);
+              const bankAngle = Phaser.Math.Clamp(angleDeg, -35, 35);
+              birdRoot.setAngle(bankAngle);
+            }
+          }
+        },
         onComplete: () => {
           trailTimer.remove();
           if (onComplete) onComplete();

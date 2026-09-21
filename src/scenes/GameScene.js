@@ -905,10 +905,10 @@ export default class GameScene extends Phaser.Scene {
 
     this.currentStars.forEach((item, idx) => {
       if (typeof item.flyTo === "function") {
-        // Spine Bird with articulated flight & rapid wing flapping
+        // Spine Bird with articulated flight along random curved swoops
         item.flyTo(targetX, targetY, {
-          duration: 540,
-          delay: idx * 130,
+          duration: 650 + Phaser.Math.Between(0, 100),
+          delay: idx * 110,
           onComplete: () => handleItemArrival(idx),
         });
       } else {
