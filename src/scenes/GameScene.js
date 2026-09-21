@@ -117,17 +117,21 @@ export default class GameScene extends Phaser.Scene {
       .setDepth(61);
 
     // 2. Score Panel (Birdhouse with Nest, Food & Water Bowls)
-    this.scoreContainer = this.add.container(480, 105).setDepth(60);
-    this.scorePanel = this.add.image(0, 0, "panel_score").setScale(0.85);
+    const panelX = 0;
+    const panelY = 0;
+    const panelScale = 0.92;
+
+    this.scoreContainer = this.add.container(480, 110).setDepth(60);
+    this.scorePanel = this.add.image(panelX, panelY, "panel_score").setScale(panelScale);
 
     this.scoreText = this.add
-      .text(0, -18, `${this.score}`, {
+      .text(panelX, panelY - Math.round(16 * panelScale), `${this.score}`, {
         fontFamily: "Comic Sans MS, Quicksand, sans-serif",
-        fontSize: "32px",
+        fontSize: "34px",
         fontStyle: "bold",
         color: "#5d2b00",
         stroke: "#ffffff",
-        strokeThickness: 3,
+        strokeThickness: 4,
       })
       .setOrigin(0.5);
 
